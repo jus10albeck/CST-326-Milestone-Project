@@ -1,0 +1,126 @@
+﻿@model IEnumerable<EquipmentInventoryApp.Models.Equipment>
+
+@{
+    ViewData["Title"] = "Equipment Inventory";
+}
+
+<h2>Equipment Inventory</h2>
+
+<p>Search and filter the equipment inventory.</p>
+
+<form asp-controller="Equipment"
+      asp-action="Index"
+      method="get"
+      class="row g-3 mb-4">
+
+    <div class="col-md-4">
+        <label for="searchString" class="form-label">
+            Search Equipment
+        </label>
+
+        <input type="text"
+               id="searchString"
+               name="searchString"
+               value="@ViewBag.SearchString"
+               class="form-control"
+               placeholder="Name or serial number" />
+    </div>
+
+    <div class="col-md-3">
+        <label for="categoryId" class="form-label">
+            Category
+        </label>
+
+        <select id="categoryId"
+                name="categoryId"
+                asp-items="ViewBag.Categories"
+                class="form-select">
+            <option value="">All Categories</option>
+        </select>
+    </div>
+
+    <div class="col-md-3">
+        <label for="status" class="form-label">
+            Status
+        </label>
+
+        <select id="status"
+                name="status"
+                asp-items="ViewBag.Statuses"
+                class="form-select">
+            <option value="">All Statuses</option>
+        </select>
+    </div>
+
+    <div class="col-md-2 d-flex align-items-end">
+        <button type="submit"
+                class="btn btn-primary w-100">
+            Search
+        </button>
+    </div>
+
+    <div class="col-12">
+        <a asp-controller="Equipment"
+           asp-action="Index"
+           class="btn btn-secondary">
+            Clear Filters
+        </a>
+    </div>
+</form>
+
+<div class="table-responsive">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Serial Number</th>
+                <th>Location</th>
+                <th>Condition</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        <a asp-controller="Equipment"
+                           asp-action="Details"
+                           asp-route-id="@item.EquipmentId">
+                            @item.Name
+                        </a>
+                    </td>
+
+                    <td>@item.Category.CategoryName</td>
+
+                    <td>@item.SerialNumber</td>
+
+                    <td>@item.Location</td>
+
+                    <td>@item.Condition</td>
+
+                    <td>@item.Status</td>
+
+                    <td>
+                        <a asp-controller="Equipment"
+                           asp-action="Details"
+                           asp-route-id="@item.EquipmentId"
+                           class="btn btn-sm btn-outline-primary">
+                            View Details
+                        </a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No equipment records match your search.
+    </div>
+}
