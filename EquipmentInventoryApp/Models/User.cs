@@ -31,6 +31,11 @@ namespace EquipmentInventoryApp.Models
 
         public bool MustChangePassword { get; set; }
 
+        [Required]
+        [MaxLength(32)]
+        public string SecurityStamp { get; set; } =
+            Guid.NewGuid().ToString("N");
+
         public ICollection<Checkout> Checkouts { get; set; }
             = new List<Checkout>();
 

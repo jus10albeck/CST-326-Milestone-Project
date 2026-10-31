@@ -261,6 +261,11 @@ namespace EquipmentInventoryApp.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<string>("SecurityStamp")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasColumnType("longtext");

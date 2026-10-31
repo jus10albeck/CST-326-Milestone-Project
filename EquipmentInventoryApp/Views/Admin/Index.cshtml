@@ -1,0 +1,17 @@
+﻿@{
+    ViewData["Title"] = "Administrator Dashboard";
+}
+
+<h2>Administrator Dashboard</h2>
+
+<p>Welcome to the Equipment Inventory Administration area.</p>
+
+<div class="alert alert-info">
+    This page is only available to Administrators.
+</div>
+
+<a asp-controller="Equipment"
+   asp-action="Index"
+   class="btn btn-primary">
+    View Equipment
+</a>

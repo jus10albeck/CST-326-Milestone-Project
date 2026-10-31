@@ -12,6 +12,7 @@ namespace EquipmentInventoryApp.Data
         {
         }
 
+        // Sets up the database tables
         public DbSet<User> Users { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Equipment> Equipment { get; set; }
@@ -24,6 +25,7 @@ namespace EquipmentInventoryApp.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            // Makes sure emails, categories, and serial numbers are unique
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Email)
                 .IsUnique();
@@ -36,12 +38,14 @@ namespace EquipmentInventoryApp.Data
                 .HasIndex(e => e.SerialNumber)
                 .IsUnique();
 
+            // Connects equipment to its category
             modelBuilder.Entity<Equipment>()
                 .HasOne(e => e.Category)
                 .WithMany(c => c.Equipment)
                 .HasForeignKey(e => e.CategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Connects checkout records to users and equipment
             modelBuilder.Entity<Checkout>()
                 .HasOne(c => c.User)
                 .WithMany(u => u.Checkouts)
@@ -54,6 +58,7 @@ namespace EquipmentInventoryApp.Data
                 .HasForeignKey(c => c.EquipmentId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Connects reservations to users and equipment
             modelBuilder.Entity<Reservation>()
                 .HasOne(r => r.User)
                 .WithMany(u => u.Reservations)
@@ -66,6 +71,7 @@ namespace EquipmentInventoryApp.Data
                 .HasForeignKey(r => r.EquipmentId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Connects damage reports to users and equipment
             modelBuilder.Entity<DamageReport>()
                 .HasOne(d => d.User)
                 .WithMany(u => u.DamageReports)
@@ -78,6 +84,7 @@ namespace EquipmentInventoryApp.Data
                 .HasForeignKey(d => d.EquipmentId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            // Connects notifications to the user receiving them
             modelBuilder.Entity<Notification>()
                 .HasOne(n => n.User)
                 .WithMany(u => u.Notifications)
