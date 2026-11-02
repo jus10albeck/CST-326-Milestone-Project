@@ -1,12 +1,11 @@
-﻿
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0" />
 
-    <title>@ViewData["Title"] - EquipmentInventoryApp</title>
+    <title>@ViewData["Title"] - Equipment Inventory</title>
 
     <link rel="stylesheet"
           href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
@@ -18,136 +17,87 @@
     <link rel="stylesheet"
           href="~/EquipmentInventoryApp.styles.css"
           asp-append-version="true" />
+
+    <link rel="stylesheet"
+          href="~/css/app.css"
+          asp-append-version="true" />
 </head>
 
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
+<body class="app-page">
+    <header class="app-header">
 
-                <a class="navbar-brand"
-                   asp-area=""
+        @* Top row: application name, user name, and log out *@
+        <div class="app-topbar">
+            <div class="container-fluid d-flex flex-wrap align-items-center justify-content-between gap-2">
+
+                <a class="app-brand"
                    asp-controller="Home"
                    asp-action="Index">
-                    EquipmentInventoryApp
+                    Equipment Inventory
                 </a>
 
-                <button class="navbar-toggler"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#mainNavbar"
-                        aria-controls="mainNavbar"
-                        aria-expanded="false"
-                        aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <div class="app-user d-flex align-items-center">
+                        <span>@User.Identity.Name</span>
 
-                <div class="collapse navbar-collapse"
-                     id="mainNavbar">
+                        <span class="app-divider" aria-hidden="true">|</span>
 
-                    <ul class="navbar-nav me-auto">
+                        <a asp-controller="Account"
+                           asp-action="ChangePassword">Change Password</a>
 
-                        <li class="nav-item">
-                            <a class="nav-link text-dark"
-                               asp-area=""
-                               asp-controller="Home"
-                               asp-action="Index">
-                                Home
-                            </a>
-                        </li>
+                        <span class="app-divider" aria-hidden="true">|</span>
 
-                        @if (User.Identity?.IsAuthenticated == true)
-                        {
-                            <li class="nav-item">
-                                <a class="nav-link text-dark"
-                                   asp-controller="Equipment"
-                                   asp-action="Index">
-                                    Equipment
-                                </a>
-                            </li>
-
-                            @if (User.IsInRole("Administrator"))
-                            {
-                                <li class="nav-item">
-                                    <a class="nav-link text-dark"
-                                       asp-controller="Admin"
-                                       asp-action="Index">
-                                        Dashboard
-                                    </a>
-                                </li>
-                            }
-                        }
-
-                        <li class="nav-item">
-                            <a class="nav-link text-dark"
-                               asp-area=""
-                               asp-controller="Home"
-                               asp-action="Privacy">
-                                Privacy
-                            </a>
-                        </li>
-
-                    </ul>
-
-                    <div class="d-flex align-items-center gap-3">
-
-                        @if (User.Identity?.IsAuthenticated == true)
-                        {
-                            <span class="navbar-text">
-                                Welcome, @User.Identity.Name
-                            </span>
-
-                            <a asp-controller="Account"
-                               asp-action="ChangePassword"
-                               class="btn btn-outline-secondary">
-                                Change Password
-                            </a>
-
-                            <form asp-controller="Account"
-                                  asp-action="Logout"
-                                  method="post"
-                                  class="m-0">
-
-                                @Html.AntiForgeryToken()
-
-                                <button type="submit"
-                                        class="btn btn-outline-danger">
-                                    Logout
-                                </button>
-                            </form>
-                        }
-                        else
-                        {
-                            <a asp-controller="Account"
-                               asp-action="Login"
-                               class="btn btn-outline-primary">
-                                Login
-                            </a>
-                        }
-
+                        <form asp-controller="Account"
+                              asp-action="Logout"
+                              method="post"
+                              class="m-0">
+                            <button type="submit"
+                                    class="btn btn-link app-logout">
+                                Log out
+                            </button>
+                        </form>
                     </div>
-
-                </div>
+                }
+                else
+                {
+                    <a asp-controller="Account"
+                       asp-action="Login">Log in</a>
+                }
             </div>
-        </nav>
+        </div>
+
+        @* Second row: page links for the user's role.
+           More links will be added as their pages are built. *@
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <nav class="app-nav" aria-label="Main navigation">
+                <div class="container-fluid">
+                    <ul class="app-nav-list">
+
+                        @if (User.IsInRole("Administrator"))
+                        {
+                            <li>
+                                <a asp-controller="Admin"
+                                   asp-action="Index">Dashboard</a>
+                            </li>
+                        }
+
+                        <li>
+                            <a asp-controller="Equipment"
+                               asp-action="Index">Equipment</a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        }
     </header>
 
-    <div class="container">
-        <main role="main" class="pb-3">
+    <div class="container-fluid app-content">
+        <main role="main" class="pb-4">
             @RenderBody()
         </main>
     </div>
-
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - EquipmentInventoryApp -
-            <a asp-area=""
-               asp-controller="Home"
-               asp-action="Privacy">
-                Privacy
-            </a>
-        </div>
-    </footer>
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
 

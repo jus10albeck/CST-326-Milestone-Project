@@ -1,0 +1,70 @@
+/* Styles for the login page, based on the Milestone 3 wireframe.
+   Colors are placeholders until the team picks a final color scheme. */
+
+body.auth-page {
+  background-color: #121212;
+  color: #f8f9fa;
+  margin-bottom: 0;
+}
+
+/* Rounded, outlined login box */
+.auth-card {
+  max-width: 420px;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 2.5rem;
+}
+
+.auth-page .form-label {
+  color: #f8f9fa;
+}
+
+.auth-page .required-mark {
+  color: #ff4d4f;
+}
+
+/* Dark text boxes with a light outline */
+.auth-page .form-control {
+  background-color: #1a1a1a;
+  color: #f8f9fa;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 0.5rem;
+}
+
+.auth-page .form-control:focus {
+  background-color: #1a1a1a;
+  color: #f8f9fa;
+  border-color: #ffffff;
+}
+
+.auth-page .form-control::placeholder {
+  color: #8a8a8a;
+}
+
+/* Keeps browser autofill from turning the boxes white */
+.auth-page .form-control:-webkit-autofill {
+  -webkit-text-fill-color: #f8f9fa;
+  box-shadow: 0 0 0 1000px #1a1a1a inset;
+  caret-color: #f8f9fa;
+}
+
+/* Red outline and message when a field is not valid */
+.auth-page .input-validation-error,
+.auth-page .input-validation-error:focus {
+  border-color: #ff4d4f;
+}
+
+.auth-page .field-error {
+  display: block;
+  color: #ff4d4f;
+  margin-top: 0.35rem;
+}
+
+/* Hides the error box until there is an error to show */
+.auth-page .validation-summary-valid {
+  display: none;
+}
+
+.auth-page .validation-summary-errors ul {
+  margin: 0;
+  padding-left: 1rem;
+}

@@ -51,6 +51,23 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+// Creates or updates the database tables when the application starts.
+// If the tables are already up to date, nothing is changed.
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<ApplicationDbContext>();
+
+    await context.Database.MigrateAsync();
+
+    // Adds the test accounts only when their passwords are configured.
+    // Accounts that already exist are skipped.
+    if (app.Configuration.GetSection("SeedUsers").Exists())
+    {
+        await DbInitializer.SeedUsersAsync(services, app.Configuration);
+    }
+}
+
 // Handles errors when the application is not in development
 if (!app.Environment.IsDevelopment())
 {

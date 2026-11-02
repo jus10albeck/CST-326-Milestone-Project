@@ -13,9 +13,21 @@ namespace EquipmentInventoryApp.Controllers
             _logger = logger;
         }
 
+        // The site opens on the login page. Users who are already logged in
+        // are sent to the page for their role instead.
         public IActionResult Index()
         {
-            return View();
+            if (User.Identity?.IsAuthenticated != true)
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
+            if (User.IsInRole("Administrator"))
+            {
+                return RedirectToAction("Index", "Admin");
+            }
+
+            return RedirectToAction("Index", "Equipment");
         }
 
         public IActionResult Privacy()

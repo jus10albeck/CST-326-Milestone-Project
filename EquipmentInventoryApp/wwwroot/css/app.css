@@ -1,0 +1,198 @@
+/* Styles for the pages shown after logging in, based on the Milestone 3 wireframes.
+   Colors are placeholders until the team picks a final color scheme. */
+
+body.app-page {
+  background-color: #121212;
+  color: #f8f9fa;
+  margin-bottom: 0;
+}
+
+.app-page a {
+  color: #f8f9fa;
+}
+
+.app-page a:hover {
+  color: #ffffff;
+}
+
+/* ---------- Header ---------- */
+
+.app-topbar {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.85);
+  padding: 1rem 0.5rem;
+}
+
+.app-brand {
+  font-size: 1.35rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.app-user {
+  gap: 0.6rem;
+}
+
+.app-user a,
+.app-page .app-logout {
+  color: #f8f9fa;
+  text-decoration: none;
+}
+
+.app-user a:hover,
+.app-page .app-logout:hover {
+  text-decoration: underline;
+}
+
+.app-page .app-logout {
+  padding: 0;
+  border: 0;
+  font-size: inherit;
+}
+
+.app-divider {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.app-nav {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.85);
+  padding: 0.6rem 0.5rem;
+}
+
+.app-nav-list {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Puts a "|" between each page link */
+.app-nav-list li + li::before {
+  content: "|";
+  color: rgba(255, 255, 255, 0.6);
+  margin: 0 0.6rem;
+}
+
+.app-nav-list a {
+  text-decoration: none;
+}
+
+.app-nav-list a:hover {
+  text-decoration: underline;
+}
+
+.app-content {
+  padding: 1.75rem 1.5rem 0;
+}
+
+/* ---------- Dashboard summary cards ---------- */
+
+.stat-card {
+  height: 100%;
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 1.5rem;
+  text-align: center;
+}
+
+.stat-number {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+}
+
+.stat-link {
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.stat-link:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Tables ---------- */
+
+/* Outlined table used on the dashboard */
+.app-page .app-table {
+  border: 1px solid rgba(255, 255, 255, 0.85);
+}
+
+.app-page .app-table th {
+  font-weight: 400;
+  font-size: 1.05rem;
+}
+
+/* Makes Bootstrap tables readable on the dark background */
+.app-page .table {
+  color: #f8f9fa;
+  border-color: rgba(255, 255, 255, 0.85);
+  --bs-table-striped-color: #f8f9fa;
+  --bs-table-striped-bg: rgba(255, 255, 255, 0.06);
+  --bs-table-hover-color: #f8f9fa;
+  --bs-table-hover-bg: rgba(255, 255, 255, 0.1);
+}
+
+.app-page .table > :not(:first-child) {
+  border-top-color: rgba(255, 255, 255, 0.85);
+}
+
+/* ---------- Other Bootstrap parts on the dark background ---------- */
+
+.app-page .card {
+  background-color: #1a1a1a;
+  border-color: rgba(255, 255, 255, 0.85);
+}
+
+.app-page .card-header {
+  background-color: transparent;
+  border-color: rgba(255, 255, 255, 0.85);
+}
+
+.app-page .form-control,
+.app-page .form-select {
+  background-color: #1a1a1a;
+  color: #f8f9fa;
+  border-color: rgba(255, 255, 255, 0.85);
+}
+
+.app-page .form-control:focus,
+.app-page .form-select:focus {
+  background-color: #1a1a1a;
+  color: #f8f9fa;
+}
+
+.app-page .form-control::placeholder {
+  color: #8a8a8a;
+}
+
+.app-page .btn-primary {
+  color: #121212;
+  background-color: #f8f9fa;
+  border-color: #f8f9fa;
+}
+
+.app-page .btn-primary:hover {
+  color: #121212;
+  background-color: #dfe1e3;
+  border-color: #dfe1e3;
+}
+
+.app-page .btn-outline-primary {
+  color: #f8f9fa;
+  border-color: #f8f9fa;
+}
+
+.app-page .btn-outline-primary:hover {
+  color: #121212;
+  background-color: #f8f9fa;
+}

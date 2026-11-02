@@ -1,17 +1,94 @@
-﻿@{
-    ViewData["Title"] = "Administrator Dashboard";
+﻿@model EquipmentInventoryApp.ViewModels.AdminDashboardViewModel
+
+@{
+    ViewData["Title"] = "Admin Dashboard";
 }
 
-<h2>Administrator Dashboard</h2>
+<h1 class="visually-hidden">Admin Dashboard</h1>
 
-<p>Welcome to the Equipment Inventory Administration area.</p>
+@* Summary cards *@
+<div class="row row-cols-2 row-cols-lg-4 g-3 g-lg-4 mb-5">
 
-<div class="alert alert-info">
-    This page is only available to Administrators.
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-number">@Model.CheckedOutCount</div>
+            <div class="stat-label">Checked Out</div>
+            <a asp-controller="Equipment"
+               asp-action="Index"
+               asp-route-status="Checked Out"
+               class="stat-link">View List &gt;</a>
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-number">@Model.OverdueCount</div>
+            <div class="stat-label">Overdue</div>
+            <a href="#overdue-equipment"
+               class="stat-link">View List &gt;</a>
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-number">@Model.UnderRepairCount</div>
+            <div class="stat-label">Under Repair</div>
+            <a asp-controller="Equipment"
+               asp-action="Index"
+               asp-route-status="Under Repair"
+               class="stat-link">View List &gt;</a>
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-number">@Model.LostCount</div>
+            <div class="stat-label">Lost</div>
+            <a asp-controller="Equipment"
+               asp-action="Index"
+               asp-route-status="Lost"
+               class="stat-link">View List &gt;</a>
+        </div>
+    </div>
 </div>
 
-<a asp-controller="Equipment"
-   asp-action="Index"
-   class="btn btn-primary">
-    View Equipment
-</a>
+@* Overdue equipment list *@
+<h2 id="overdue-equipment" class="h5 fw-bold mb-3">Overdue Equipment</h2>
+
+<div class="table-responsive">
+    <table class="table app-table mb-0">
+        <thead>
+            <tr>
+                <th scope="col">Item</th>
+                <th scope="col">Employee</th>
+                <th scope="col">Due Date</th>
+                <th scope="col">Days Overdue</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @if (!Model.OverdueItems.Any())
+            {
+                <tr>
+                    <td colspan="4" class="text-center py-3">
+                        No equipment is overdue.
+                    </td>
+                </tr>
+            }
+
+            @foreach (var item in Model.OverdueItems)
+            {
+                <tr>
+                    <td>
+                        <a asp-controller="Equipment"
+                           asp-action="Details"
+                           asp-route-id="@item.EquipmentId">@item.ItemName</a>
+                    </td>
+                    <td>@item.EmployeeName</td>
+                    <td>@item.DueDate.ToString("MM/dd/yyyy")</td>
+                    <td>@item.DaysOverdue</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

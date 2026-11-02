@@ -1,45 +1,58 @@
 ﻿@model EquipmentInventoryApp.ViewModels.LoginViewModel
 
 @{
-    ViewData["Title"] = "Login";
+    ViewData["Title"] = "Log In";
+
+    // Uses the layout without the navigation bar
+    Layout = "_AuthLayout";
 }
 
-<div class="row justify-content-center mt-5">
-    <div class="col-md-5">
+<div class="auth-card w-100 px-4 py-5">
 
-        <h2 class="text-center mb-4">Equipment Inventory Login</h2>
+    <h1 class="h3 fw-bold text-center mb-4">Equipment Inventory</h1>
 
-        <form asp-controller="Account"
-              asp-action="Login"
-              method="post">
+    <form asp-controller="Account"
+          asp-action="Login"
+          method="post">
 
-            @Html.AntiForgeryToken()
+        @* Shows login errors from the server, such as a wrong password *@
+        <div asp-validation-summary="ModelOnly"
+             class="alert alert-danger py-2 small"
+             role="alert"></div>
 
-            <div asp-validation-summary="All"
-                 class="text-danger mb-3"></div>
+        <div class="mb-3">
+            <label asp-for="Email" class="form-label">
+                Email <span class="required-mark" aria-hidden="true">*</span>
+            </label>
+            <input asp-for="Email"
+                   class="form-control"
+                   placeholder="name@example.com"
+                   autocomplete="username"
+                   autofocus />
+            <span asp-validation-for="Email"
+                  class="field-error small"></span>
+        </div>
 
-            <div class="mb-3">
-                <label asp-for="Email" class="form-label"></label>
-                <input asp-for="Email" class="form-control" />
-                <span asp-validation-for="Email"
-                      class="text-danger"></span>
-            </div>
+        <div class="mb-3">
+            <label asp-for="Password" class="form-label">
+                Password <span class="required-mark" aria-hidden="true">*</span>
+            </label>
+            <input asp-for="Password"
+                   class="form-control"
+                   autocomplete="current-password" />
+            <span asp-validation-for="Password"
+                  class="field-error small"></span>
+        </div>
 
-            <div class="mb-3">
-                <label asp-for="Password" class="form-label"></label>
-                <input asp-for="Password"
-                       class="form-control" />
-                <span asp-validation-for="Password"
-                      class="text-danger"></span>
-            </div>
-
+        <div class="text-center mt-4">
             <button type="submit"
-                    class="btn btn-primary w-100">
+                    class="btn btn-outline-light btn-lg fw-bold px-5">
                 Log In
             </button>
+        </div>
 
-        </form>
-    </div>
+        <p class="text-center small mt-3 mb-0">* Required Field</p>
+    </form>
 </div>
 
 @section Scripts {
