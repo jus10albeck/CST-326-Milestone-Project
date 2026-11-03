@@ -2,9 +2,23 @@
 
 @{
     ViewData["Title"] = "Equipment Inventory";
+
+    var reservedIds = ViewBag.ReservedIds as HashSet<int> ?? new HashSet<int>();
 }
 
-<h2>Equipment Inventory</h2>
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+    <h2 class="mb-0">Equipment Inventory</h2>
+
+    @* Only Administrators can add equipment *@
+    @if (User.IsInRole("Administrator"))
+    {
+        <a asp-controller="Equipment"
+           asp-action="Create"
+           class="btn btn-outline-light fw-bold">
+            + Add Equipment
+        </a>
+    }
+</div>
 
 <p>Search and filter the equipment inventory.</p>
 
@@ -102,7 +116,8 @@
 
                     <td>@item.Condition</td>
 
-                    <td>@item.Status</td>
+                    @* Shows Reserved while an Approved reservation covers today (FR-28) *@
+                    <td>@EquipmentOptions.DisplayStatus(item.Status, reservedIds.Contains(item.EquipmentId))</td>
 
                     <td>
                         <a asp-controller="Equipment"

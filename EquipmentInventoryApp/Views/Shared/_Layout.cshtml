@@ -87,6 +87,22 @@
                             <a asp-controller="Equipment"
                                asp-action="Index">Equipment</a>
                         </li>
+
+                        @if (User.IsInRole("Employee"))
+                        {
+                            <li>
+                                <a asp-controller="Checkouts"
+                                   asp-action="MyEquipment">My Equipment</a>
+                            </li>
+                        }
+
+                        @if (User.IsInRole("Administrator"))
+                        {
+                            <li>
+                                <a asp-controller="Categories"
+                                   asp-action="Index">Categories</a>
+                            </li>
+                        }
                     </ul>
                 </div>
             </nav>
@@ -95,6 +111,33 @@
 
     <div class="container-fluid app-content">
         <main role="main" class="pb-4">
+
+            @* Shows a one-time success message, such as "Equipment added." *@
+            @if (TempData["SuccessMessage"] is string successMessage)
+            {
+                <div class="alert alert-success alert-dismissible fade show"
+                     role="status">
+                    @successMessage
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="alert"
+                            aria-label="Close"></button>
+                </div>
+            }
+
+            @* Shows a one-time error message *@
+            @if (TempData["ErrorMessage"] is string errorMessage)
+            {
+                <div class="alert alert-danger alert-dismissible fade show"
+                     role="alert">
+                    @errorMessage
+                    <button type="button"
+                            class="btn-close"
+                            data-bs-dismiss="alert"
+                            aria-label="Close"></button>
+                </div>
+            }
+
             @RenderBody()
         </main>
     </div>

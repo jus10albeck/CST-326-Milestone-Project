@@ -1,0 +1,81 @@
+﻿@model EquipmentInventoryApp.ViewModels.MyEquipmentViewModel
+
+@{
+    ViewData["Title"] = "My Equipment";
+}
+
+<div class="d-flex flex-wrap align-items-baseline justify-content-between gap-2 mb-3">
+    <h2 class="h4 fw-bold mb-0">My Equipment</h2>
+
+    <span class="small">
+        @Model.Items.Count of @Model.MaxActiveCheckouts items checked out
+    </span>
+</div>
+
+@if (!Model.Items.Any())
+{
+    <p>
+        You have no equipment checked out.
+        <a asp-controller="Equipment" asp-action="Index">Browse the Equipment List</a>
+        to find an item.
+    </p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table app-table mb-0">
+            <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Serial</th>
+                    <th scope="col">Checked Out</th>
+                    <th scope="col">Due Date</th>
+                    <th scope="col">Status</th>
+                    <th scope="col" class="text-end">Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    @* Overdue rows are highlighted and labeled, so color is not the only signal (FR-31) *@
+                    <tr class="@(item.IsOverdue ? "row-overdue" : "")">
+                        <td>
+                            <a asp-controller="Equipment"
+                               asp-action="Details"
+                               asp-route-id="@item.EquipmentId">@item.Name</a>
+                        </td>
+                        <td>@item.SerialNumber</td>
+                        <td>@item.CheckoutDate.ToString("MM/dd/yyyy")</td>
+                        <td>@item.DueDate.ToString("MM/dd/yyyy")</td>
+                        <td>
+                            @if (item.IsOverdue)
+                            {
+                                <span class="fw-bold">Overdue</span>
+                            }
+                            else
+                            {
+                                <span>On Time</span>
+                            }
+                        </td>
+                        <td class="text-end">
+                            @* Return button beside each item (FR-24) *@
+                            <form asp-controller="Checkouts"
+                                  asp-action="Return"
+                                  asp-route-id="@item.EquipmentId"
+                                  method="post"
+                                  class="d-inline"
+                                  data-submit-once>
+                                <button type="submit"
+                                        class="btn btn-sm return-btn"
+                                        aria-label="Return @item.Name">
+                                    Return
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

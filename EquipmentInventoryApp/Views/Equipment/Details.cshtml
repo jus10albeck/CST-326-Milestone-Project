@@ -1,67 +1,124 @@
 ﻿@model EquipmentInventoryApp.Models.Equipment
 
 @{
-    ViewData["Title"] = "Equipment Details";
+    ViewData["Title"] = Model.Name;
+
+    // Shows the item's photo, or the placeholder image when it has none (FR-15, FR-19)
+    var hasPhoto = !string.IsNullOrWhiteSpace(Model.PhotoPath);
+    var photoSource = hasPhoto
+        ? Model.PhotoPath
+        : Url.Content("~/images/equipment-placeholder.jpg");
+    var photoAlt = hasPhoto
+        ? $"Photo of {Model.Name}"
+        : "No photo available";
+
+    // Set by the controller for employees only
+    var checkout = ViewBag.CheckoutAvailability as EquipmentInventoryApp.Services.CheckoutAvailability;
+
+    // Reserved is shown while an Approved reservation covers today (FR-28)
+    var displayStatus = ViewBag.DisplayStatus as string ?? Model.Status;
+    var reservedForMe = ViewBag.ReservedForCurrentUser as bool? == true;
 }
 
-<h2>Equipment Details</h2>
+<a asp-controller="Equipment"
+   asp-action="Index"
+   class="back-link">&lt; Back to Equipment List</a>
 
-<div class="card mt-3">
-    <div class="card-header">
-        <h4 class="mb-0">@Model.Name</h4>
+<div class="row g-4 mt-1">
+
+    @* Photo *@
+    <div class="col-md-5 col-lg-4">
+        <img src="@photoSource"
+             alt="@photoAlt"
+             class="detail-photo @(hasPhoto ? "" : "detail-photo-placeholder")" />
     </div>
 
-    <div class="card-body">
-        <dl class="row">
+    @* Item information *@
+    <div class="col-md-7 col-lg-8">
 
-            <dt class="col-sm-3">Equipment ID</dt>
-            <dd class="col-sm-9">@Model.EquipmentId</dd>
+        <h2 class="h4 fw-bold mb-3">@Model.Name</h2>
 
-            <dt class="col-sm-3">Category</dt>
-            <dd class="col-sm-9">@Model.Category.CategoryName</dd>
+        <dl class="detail-list">
+            <dt>Category</dt>
+            <dd>@Model.Category.CategoryName</dd>
 
-            <dt class="col-sm-3">Serial Number</dt>
-            <dd class="col-sm-9">@Model.SerialNumber</dd>
+            <dt>Serial Number</dt>
+            <dd>@Model.SerialNumber</dd>
 
-            <dt class="col-sm-3">Location</dt>
-            <dd class="col-sm-9">@Model.Location</dd>
+            <dt>Location</dt>
+            <dd>@(string.IsNullOrWhiteSpace(Model.Location) ? "Not specified" : Model.Location)</dd>
 
-            <dt class="col-sm-3">Condition</dt>
-            <dd class="col-sm-9">@Model.Condition</dd>
+            <dt>Condition</dt>
+            <dd>@(string.IsNullOrWhiteSpace(Model.Condition) ? "Not specified" : Model.Condition)</dd>
 
-            <dt class="col-sm-3">Status</dt>
-            <dd class="col-sm-9">
-                @if (Model.Status == "Available")
+            <dt>Status</dt>
+            <dd>
+                @if (displayStatus == "Available")
                 {
                     <span class="badge bg-success">Available</span>
                 }
-                else if (Model.Status == "Checked Out")
+                else if (displayStatus == "Checked Out")
                 {
-                    <span class="badge bg-warning text-dark">
-                        Checked Out
-                    </span>
+                    <span class="badge bg-warning text-dark">Checked Out</span>
+                }
+                else if (displayStatus == "Reserved")
+                {
+                    <span class="badge bg-info text-dark">Reserved</span>
+
+                    @if (reservedForMe)
+                    {
+                        <span class="small ms-1">Reserved for you today</span>
+                    }
                 }
                 else
                 {
-                    <span class="badge bg-secondary">@Model.Status</span>
+                    <span class="badge bg-secondary">@displayStatus</span>
                 }
             </dd>
 
-            <dt class="col-sm-3">Description</dt>
-            <dd class="col-sm-9">
-                @(string.IsNullOrWhiteSpace(Model.Description)
-                                ? "No description available."
-                                : Model.Description)
-            </dd>
-
+            <dt>Description</dt>
+            <dd>@(string.IsNullOrWhiteSpace(Model.Description) ? "No description available." : Model.Description)</dd>
         </dl>
     </div>
 </div>
 
-<div class="mt-3">
-    <a asp-controller="Equipment"
-       asp-action="Index"
-       class="btn btn-secondary">
-        Back to Equipment List
-    </a>
-</div>
+@* Employee actions. Check Out is enabled only when the item is Available
+   and the employee is under the checkout limit. *@
+@if (checkout != null)
+{
+    <div class="detail-actions mt-4">
+        @if (checkout.CanCheckOut)
+        {
+            <form asp-controller="Checkouts"
+                  asp-action="CheckOut"
+                  asp-route-id="@Model.EquipmentId"
+                  method="post"
+                  class="d-inline"
+                  data-submit-once>
+                <button type="submit"
+                        class="btn btn-outline-light fw-bold px-4">
+                    Check Out
+                </button>
+            </form>
+
+            <p class="small mt-2 mb-0">
+                If checked out today, this item is due back on
+                <strong>@checkout.DueDateIfCheckedOutToday.ToString("MM/dd/yyyy")</strong>.
+                You have @checkout.ActiveCheckouts of @checkout.MaxActiveCheckouts items checked out.
+            </p>
+        }
+        else
+        {
+            <button type="button"
+                    class="btn btn-outline-light fw-bold px-4"
+                    disabled
+                    aria-describedby="checkout-reason">
+                Check Out
+            </button>
+
+            <p id="checkout-reason" class="small mt-2 mb-0">
+                @checkout.Reason
+            </p>
+        }
+    </div>
+}

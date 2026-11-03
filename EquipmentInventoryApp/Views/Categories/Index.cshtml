@@ -1,0 +1,92 @@
+﻿@model EquipmentInventoryApp.ViewModels.CategoryIndexViewModel
+
+@{
+    ViewData["Title"] = "Categories";
+}
+
+<h2 class="h4 fw-bold mb-1">Categories</h2>
+<p class="mb-4">Add, rename, or delete the categories used to group equipment.</p>
+
+@* Add Category *@
+<form asp-controller="Categories"
+      asp-action="Create"
+      method="post"
+      class="mb-4">
+
+    <label asp-for="NewCategoryName" class="form-label">
+        New Category <span class="required-mark" aria-hidden="true">*</span>
+    </label>
+
+    <div class="d-flex flex-wrap gap-2">
+        <input asp-for="NewCategoryName"
+               class="form-control category-name-input"
+               maxlength="100"
+               placeholder="Tablets"
+               autocomplete="off" />
+
+        <button type="submit"
+                class="btn btn-outline-light fw-bold">
+            Add Category
+        </button>
+    </div>
+
+    <span asp-validation-for="NewCategoryName"
+          class="field-error small"></span>
+</form>
+
+@* Category list *@
+<div class="table-responsive">
+    <table class="table app-table mb-0">
+        <thead>
+            <tr>
+                <th scope="col">Category</th>
+                <th scope="col">Items</th>
+                <th scope="col" class="text-end">Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @if (!Model.Categories.Any())
+            {
+                <tr>
+                    <td colspan="3" class="text-center py-3">
+                        No categories yet. Add one above.
+                    </td>
+                </tr>
+            }
+
+            @foreach (var category in Model.Categories)
+            {
+                <tr>
+                    <td class="align-middle">@category.CategoryName</td>
+
+                    <td class="align-middle">
+                        @if (category.ItemCount > 0)
+                        {
+                            @* Opens the Equipment List filtered to this category *@
+                            <a asp-controller="Equipment"
+                               asp-action="Index"
+                               asp-route-categoryId="@category.CategoryId">@category.ItemCount</a>
+                        }
+                        else
+                        {
+                            <span>0</span>
+                        }
+                    </td>
+
+                    <td class="text-end">
+                        <a asp-controller="Categories"
+                           asp-action="Edit"
+                           asp-route-id="@category.CategoryId"
+                           class="btn btn-sm btn-outline-light">Rename</a>
+
+                        <a asp-controller="Categories"
+                           asp-action="Delete"
+                           asp-route-id="@category.CategoryId"
+                           class="btn btn-sm btn-outline-danger ms-1">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

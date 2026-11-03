@@ -28,6 +28,13 @@ builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 
 builder.Services.AddScoped<CustomCookieAuthenticationEvents>();
 
+// Sets up checkout rules. The loan period and checkout limit can be changed
+// in appsettings.json under "Checkout"; otherwise 7 days and 3 items are used.
+builder.Services.Configure<CheckoutOptions>(
+    builder.Configuration.GetSection("Checkout"));
+
+builder.Services.AddScoped<CheckoutService>();
+
 // Sets up login cookies and the 30-minute session
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -60,11 +67,12 @@ using (var scope = app.Services.CreateScope())
 
     await context.Database.MigrateAsync();
 
-    // Adds the test accounts only when their passwords are configured.
-    // Accounts that already exist are skipped.
+    // Adds the test accounts and starter categories only when test passwords
+    // are configured. Records that already exist are skipped.
     if (app.Configuration.GetSection("SeedUsers").Exists())
     {
         await DbInitializer.SeedUsersAsync(services, app.Configuration);
+        await DbInitializer.SeedCategoriesAsync(services);
     }
 }
 

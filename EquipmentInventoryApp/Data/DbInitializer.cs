@@ -7,6 +7,33 @@ namespace EquipmentInventoryApp.Data
 {
     public static class DbInitializer
     {
+        // Adds starter categories for testing when there are none yet.
+        // Administrators will manage categories on the Categories page once it is built.
+        public static async Task SeedCategoriesAsync(IServiceProvider services)
+        {
+            var context = services.GetRequiredService<ApplicationDbContext>();
+
+            if (await context.Categories.AnyAsync())
+            {
+                return;
+            }
+
+            var names = new[]
+            {
+                "Laptops",
+                "Monitors",
+                "Projectors",
+                "Cameras",
+                "Audio",
+                "Accessories"
+            };
+
+            context.Categories.AddRange(
+                names.Select(n => new Category { CategoryName = n }));
+
+            await context.SaveChangesAsync();
+        }
+
         // Creates the test accounts for the application
         public static async Task SeedUsersAsync(
             IServiceProvider services,

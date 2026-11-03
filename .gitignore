@@ -7,3 +7,7 @@ Milestone 1/~$lestone 1 - Part 1.docx
 bin/
 obj/
 *.user
+
+# Equipment photos uploaded while testing
+EquipmentInventoryApp/wwwroot/uploads/
+

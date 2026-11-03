@@ -1,0 +1,284 @@
+﻿@model EquipmentInventoryApp.ViewModels.EquipmentFormViewModel
+
+@{
+    ViewData["Title"] = "Add Equipment";
+
+    var reselectPhoto = ViewBag.ReselectPhoto as bool? == true;
+
+    var newCategoryValue = EquipmentInventoryApp.ViewModels.EquipmentFormViewModel.NewCategoryOption;
+    var isNewCategory = Model.CategoryId == newCategoryValue;
+
+    // Existing category names, used to warn about duplicates while typing
+    var existingCategoryNames = Model.Categories
+        .Where(c => c.Value != newCategoryValue.ToString())
+        .Select(c => c.Text);
+}
+
+<a asp-controller="Equipment"
+   asp-action="Index"
+   class="back-link">&lt; Back to Equipment List</a>
+
+<div class="form-panel mt-3">
+
+    <h2 class="h4 fw-bold mb-1">Add Equipment</h2>
+
+    <p class="small mb-4">
+        Fields marked <span class="required-mark">*</span> are required.
+    </p>
+
+    @if (!existingCategoryNames.Any())
+    {
+        <div class="alert alert-warning small" role="alert">
+            No categories exist yet. Choose "+ Add New" in the Category list to create one.
+        </div>
+    }
+
+    <form asp-controller="Equipment"
+          asp-action="Create"
+          method="post"
+          enctype="multipart/form-data"
+          data-submit-once>
+
+        @* Shows errors that are not tied to one field *@
+        <div asp-validation-summary="ModelOnly"
+             class="alert alert-danger py-2 small"
+             role="alert"></div>
+
+        <div class="row g-3">
+
+            @* Equip-1 *@
+            <div class="col-md-6">
+                <label asp-for="Name" class="form-label">
+                    Name <span class="required-mark" aria-hidden="true">*</span>
+                </label>
+                <input asp-for="Name"
+                       class="form-control"
+                       placeholder="Dell Latitude 5440" />
+                <span asp-validation-for="Name"
+                      class="field-error small"></span>
+            </div>
+
+            @* Equip-3 *@
+            <div class="col-md-6">
+                <label asp-for="SerialNumber" class="form-label">
+                    Serial Number <span class="required-mark" aria-hidden="true">*</span>
+                </label>
+                <input asp-for="SerialNumber"
+                       class="form-control"
+                       placeholder="DL5440-00123" />
+                <span asp-validation-for="SerialNumber"
+                      class="field-error small"></span>
+            </div>
+
+            @* Equip-2 *@
+            <div class="col-md-6">
+                <label asp-for="CategoryId" class="form-label">
+                    Category <span class="required-mark" aria-hidden="true">*</span>
+                </label>
+                <select asp-for="CategoryId"
+                        asp-items="Model.Categories"
+                        class="form-select">
+                    <option value="">Select a category</option>
+                </select>
+                <span asp-validation-for="CategoryId"
+                      class="field-error small"></span>
+
+                @* Shown only when "+ Add New" is chosen *@
+                <div id="new-category-group"
+                     class="mt-2 @(isNewCategory ? "" : "d-none")">
+                    <label asp-for="NewCategoryName" class="form-label small mb-1">
+                        New Category Name <span class="required-mark" aria-hidden="true">*</span>
+                    </label>
+                    <input asp-for="NewCategoryName"
+                           class="form-control"
+                           maxlength="100"
+                           placeholder="Tablets"
+                           autocomplete="off" />
+                    <span asp-validation-for="NewCategoryName"
+                          id="new-category-error"
+                          class="field-error small"
+                          aria-live="polite"></span>
+                </div>
+            </div>
+
+            @* Equip-4 *@
+            <div class="col-md-6">
+                <label asp-for="Location" class="form-label">Location</label>
+                <input asp-for="Location"
+                       class="form-control"
+                       placeholder="Room 204" />
+                <span asp-validation-for="Location"
+                      class="field-error small"></span>
+            </div>
+
+            @* Equip-5 *@
+            <div class="col-md-6">
+                <label asp-for="Condition" class="form-label">Condition</label>
+                <select asp-for="Condition"
+                        asp-items="Model.Conditions"
+                        class="form-select">
+                    <option value="">Not specified</option>
+                </select>
+                <span asp-validation-for="Condition"
+                      class="field-error small"></span>
+            </div>
+
+            @* Equip-6 *@
+            <div class="col-md-6">
+                <label asp-for="Status" class="form-label">
+                    Status <span class="required-mark" aria-hidden="true">*</span>
+                </label>
+                <select asp-for="Status"
+                        asp-items="Model.Statuses"
+                        class="form-select">
+                </select>
+                <span asp-validation-for="Status"
+                      class="field-error small"></span>
+            </div>
+
+            @* Equip-7 *@
+            <div class="col-12">
+                <label asp-for="Description" class="form-label">Description</label>
+                <textarea asp-for="Description"
+                          class="form-control"
+                          rows="4"
+                          placeholder="16GB RAM, charger included"></textarea>
+                <span asp-validation-for="Description"
+                      class="field-error small"></span>
+            </div>
+
+            @* Equip-8 *@
+            <div class="col-12">
+                <label asp-for="Photo" class="form-label">Photo</label>
+                <input asp-for="Photo"
+                       type="file"
+                       class="form-control"
+                       accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                       aria-describedby="photo-help" />
+                <div id="photo-help" class="form-text">
+                    JPG or PNG, up to 5 MB. A placeholder image is shown when no photo is added.
+                </div>
+                @if (reselectPhoto)
+                {
+                    <div class="form-text text-warning">
+                        Please choose the photo again before saving.
+                    </div>
+                }
+                <span asp-validation-for="Photo"
+                      id="photo-error"
+                      class="field-error small"></span>
+            </div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 mt-4">
+            <button type="submit"
+                    class="btn btn-outline-light fw-bold px-4">
+                Save
+            </button>
+
+            <a asp-controller="Equipment"
+               asp-action="Index"
+               class="btn btn-outline-secondary px-4">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        // Shows the New Category box when "+ Add New" is chosen and warns about duplicate names.
+        // The server checks the name again when saving.
+        (function () {
+            var select = document.getElementById("CategoryId");
+            var group = document.getElementById("new-category-group");
+            var input = document.getElementById("NewCategoryName");
+            var message = document.getElementById("new-category-error");
+
+            if (!select || !group || !input || !message) {
+                return;
+            }
+
+            var newValue = "@newCategoryValue";
+            var existingNames = (@Json.Serialize(existingCategoryNames))
+                .map(function (name) { return name.trim().toLowerCase(); });
+
+            function isAddingNew() {
+                return select.value === newValue;
+            }
+
+            function showError(text) {
+                message.textContent = text;
+                input.classList.toggle("input-validation-error", text !== "");
+            }
+
+            function checkName() {
+                var name = input.value.trim().toLowerCase();
+
+                if (name !== "" && existingNames.indexOf(name) !== -1) {
+                    showError("Category already exists.");
+                    return false;
+                }
+
+                showError("");
+                return true;
+            }
+
+            select.addEventListener("change", function () {
+                if (isAddingNew()) {
+                    group.classList.remove("d-none");
+                    input.focus();
+                } else {
+                    group.classList.add("d-none");
+                    input.value = "";
+                    showError("");
+                }
+            });
+
+            input.addEventListener("input", checkName);
+
+            // Stops the form from being sent with a missing or duplicate category name
+            select.form.addEventListener("submit", function (event) {
+                if (!isAddingNew()) {
+                    return;
+                }
+
+                if (input.value.trim() === "") {
+                    showError("Please enter a category name");
+                } else if (checkName()) {
+                    return;
+                }
+
+                event.preventDefault();
+                input.focus();
+            });
+        })();
+
+        // Gives quick feedback on the photo. The server checks it again when saving.
+        (function () {
+            var input = document.getElementById("Photo");
+            var message = document.getElementById("photo-error");
+
+            if (!input || !message) {
+                return;
+            }
+
+            input.addEventListener("change", function () {
+                var file = input.files && input.files[0];
+                var isValid = !file ||
+                    (/\.(jpe?g|png)$/i.test(file.name) && file.size <= 5 * 1024 * 1024);
+
+                if (isValid) {
+                    message.textContent = "";
+                    input.classList.remove("input-validation-error");
+                } else {
+                    input.value = "";
+                    message.textContent = "Photo must be a JPG or PNG under 5 MB.";
+                    input.classList.add("input-validation-error");
+                }
+            });
+        })();
+    </script>
+}
