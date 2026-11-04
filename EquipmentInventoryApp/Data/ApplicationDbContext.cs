@@ -20,6 +20,7 @@ namespace EquipmentInventoryApp.Data
         public DbSet<Reservation> Reservations { get; set; }
         public DbSet<DamageReport> DamageReports { get; set; }
         public DbSet<Notification> Notifications { get; set; }
+        public DbSet<EquipmentHistory> EquipmentHistory { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -37,6 +38,10 @@ namespace EquipmentInventoryApp.Data
             modelBuilder.Entity<Equipment>()
                 .HasIndex(e => e.SerialNumber)
                 .IsUnique();
+
+            // Speeds up loading one item's history
+            modelBuilder.Entity<EquipmentHistory>()
+                .HasIndex(h => h.EquipmentId);
 
             // Connects equipment to its category
             modelBuilder.Entity<Equipment>()

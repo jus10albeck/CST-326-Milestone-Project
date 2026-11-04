@@ -1,0 +1,121 @@
+﻿@model EquipmentInventoryApp.ViewModels.DeactivateUserViewModel
+
+@{
+    ViewData["Title"] = "Deactivate Account";
+}
+
+<a asp-controller="Users"
+   asp-action="Index"
+   class="back-link">&lt; Back to User Management</a>
+
+<div class="form-panel mt-3">
+
+    <h2 class="h4 fw-bold mb-3">Deactivate Account: @Model.FullName</h2>
+
+    @if (Model.Items.Any())
+    {
+        <div class="alert alert-warning small" role="alert">
+            @Model.FullName (@Model.Email) still has @Model.Items.Count item(s) checked out.
+            Choose whether each item was returned or should be marked Lost, then confirm.
+        </div>
+
+        <div class="table-responsive">
+            <table class="table app-table mb-0">
+                <thead>
+                    <tr>
+                        <th scope="col">Item</th>
+                        <th scope="col">Serial</th>
+                        <th scope="col">Checked Out</th>
+                        <th scope="col">Due Date</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @for (var i = 0; i < Model.Items.Count; i++)
+                    {
+                        var item = Model.Items[i];
+
+                        <tr class="@(item.IsOverdue ? "row-overdue" : "")">
+                            <td>
+                                @* Opens in a new tab so this page stays open *@
+                                <a asp-controller="Equipment"
+                                   asp-action="Details"
+                                   asp-route-id="@item.EquipmentId"
+                                   target="_blank"
+                                   rel="noopener">@item.Name</a>
+                            </td>
+                            <td>@item.SerialNumber</td>
+                            <td>@item.CheckoutDate.ToString("MM/dd/yyyy")</td>
+                            <td>@item.DueDate.ToString("MM/dd/yyyy")</td>
+                            <td>
+                                @if (item.IsOverdue)
+                                {
+                                    <span class="fw-bold">Overdue</span>
+                                }
+                                else
+                                {
+                                    <span>On Time</span>
+                                }
+                            </td>
+                            <td>
+                                @* Return (the default) or mark the item Lost *@
+                                <input type="hidden"
+                                       name="items[@i].EquipmentId"
+                                       value="@item.EquipmentId"
+                                       form="deactivate-form" />
+
+                                <div class="d-flex flex-wrap gap-3">
+                                    <label class="form-check-label d-flex align-items-center gap-1">
+                                        <input type="radio"
+                                               class="form-check-input mt-0"
+                                               name="items[@i].MarkLost"
+                                               value="false"
+                                               form="deactivate-form"
+                                               checked />
+                                        Return
+                                    </label>
+
+                                    <label class="form-check-label d-flex align-items-center gap-1">
+                                        <input type="radio"
+                                               class="form-check-input mt-0"
+                                               name="items[@i].MarkLost"
+                                               value="true"
+                                               form="deactivate-form"
+                                               aria-label="Mark @item.Name as Lost" />
+                                        Mark as Lost
+                                    </label>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <p>@Model.FullName has no items checked out. Select Deactivate to continue.</p>
+    }
+
+    <form id="deactivate-form"
+          asp-controller="Users"
+          asp-action="Deactivate"
+          asp-route-id="@Model.UserId"
+          method="post"
+          class="d-flex flex-wrap gap-2 mt-4"
+          data-submit-once>
+
+        <button type="submit"
+                class="btn btn-danger fw-bold px-4">
+            @(Model.Items.Any() ? "Confirm and Deactivate" : "Deactivate")
+        </button>
+
+        <a asp-controller="Users"
+           asp-action="Index"
+           class="btn btn-outline-secondary px-4">
+            Cancel
+        </a>
+    </form>
+</div>

@@ -45,13 +45,16 @@ namespace EquipmentInventoryApp.Services
 
         private readonly ApplicationDbContext _context;
         private readonly CheckoutOptions _options;
+        private readonly EquipmentHistoryService _history;
 
         public CheckoutService(
             ApplicationDbContext context,
-            IOptions<CheckoutOptions> options)
+            IOptions<CheckoutOptions> options,
+            EquipmentHistoryService history)
         {
             _context = context;
             _options = options.Value;
+            _history = history;
         }
 
         public int LoanPeriodDays => _options.LoanPeriodDays;
@@ -242,6 +245,91 @@ namespace EquipmentInventoryApp.Services
                 ItemName = checkout.Equipment.Name,
                 Message = $"You returned {checkout.Equipment.Name}."
             };
+        }
+
+        // Ends every checkout a user has, such as before their account is deactivated (US-21).
+        // Items in lostEquipmentIds are marked Lost; the rest are returned and set to Available.
+        // Call inside a transaction so it saves together with the other changes.
+        public async Task<(int Returned, int Lost)> CloseAllForUserAsync(
+            int userId,
+            ISet<int> lostEquipmentIds,
+            int? performedByUserId)
+        {
+            var active = await _context.Checkouts
+                .Where(c => c.UserId == userId && c.ReturnDate == null)
+                .Select(c => new { c.CheckoutId, c.EquipmentId })
+                .ToListAsync();
+
+            if (active.Count == 0)
+            {
+                return (0, 0);
+            }
+
+            var now = DateTime.Now;
+
+            var lostCheckoutIds = active
+                .Where(a => lostEquipmentIds.Contains(a.EquipmentId))
+                .Select(a => a.CheckoutId)
+                .ToList();
+
+            var lostItemIds = active
+                .Where(a => lostEquipmentIds.Contains(a.EquipmentId))
+                .Select(a => a.EquipmentId)
+                .ToList();
+
+            var returnCheckoutIds = active
+                .Where(a => !lostEquipmentIds.Contains(a.EquipmentId))
+                .Select(a => a.CheckoutId)
+                .ToList();
+
+            var returnItemIds = active
+                .Where(a => !lostEquipmentIds.Contains(a.EquipmentId))
+                .Select(a => a.EquipmentId)
+                .ToList();
+
+            // Records the end date on each checkout. The records are kept for history.
+            var returned = await _context.Checkouts
+                .Where(c => returnCheckoutIds.Contains(c.CheckoutId) && c.ReturnDate == null)
+                .ExecuteUpdateAsync(s => s.SetProperty(c => c.ReturnDate, now));
+
+            var lost = await _context.Checkouts
+                .Where(c => lostCheckoutIds.Contains(c.CheckoutId) && c.ReturnDate == null)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(c => c.ReturnDate, now)
+                    .SetProperty(c => c.MarkedLost, true));
+
+            // Returned items go back to Available and lost items are marked Lost,
+            // keeping any other status an administrator already set
+            await _context.Equipment
+                .Where(e => returnItemIds.Contains(e.EquipmentId) && e.Status == CheckedOutStatus)
+                .ExecuteUpdateAsync(s => s.SetProperty(e => e.Status, AvailableStatus));
+
+            await _context.Equipment
+                .Where(e => lostItemIds.Contains(e.EquipmentId) && e.Status == CheckedOutStatus)
+                .ExecuteUpdateAsync(s => s.SetProperty(e => e.Status, "Lost"));
+
+            // Records each lost item in its history (saved with the deactivation)
+            if (lostItemIds.Count > 0)
+            {
+                var employee = await _context.Users
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(u => u.UserId == userId);
+
+                var employeeName = employee == null
+                    ? "the employee"
+                    : $"{employee.FirstName} {employee.LastName}";
+
+                foreach (var equipmentId in lostItemIds)
+                {
+                    await _history.AddAsync(
+                        equipmentId,
+                        EquipmentHistoryService.MarkedLost,
+                        $"Marked Lost when {employeeName}'s account was deactivated",
+                        performedByUserId);
+                }
+            }
+
+            return (returned, lost);
         }
 
         // Counts the employee's checkouts that have not been returned

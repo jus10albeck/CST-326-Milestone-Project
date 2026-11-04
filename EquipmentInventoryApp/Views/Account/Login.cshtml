@@ -11,6 +11,12 @@
 
     <h1 class="h3 fw-bold text-center mb-4">Equipment Inventory</h1>
 
+    @* Shows one-time messages, such as after changing a password *@
+    @if (TempData["SuccessMessage"] is string successMessage)
+    {
+        <div class="alert alert-success py-2 small" role="status">@successMessage</div>
+    }
+
     <form asp-controller="Account"
           asp-action="Login"
           method="post">

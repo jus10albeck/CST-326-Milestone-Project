@@ -1,7 +1,12 @@
 ﻿@model EquipmentInventoryApp.ViewModels.EquipmentFormViewModel
 
 @{
-    ViewData["Title"] = "Add Equipment";
+    // This page is used for both Add Equipment and Edit Equipment
+    var pageTitle = Model.IsEdit ? "Edit Equipment" : "Add Equipment";
+
+    ViewData["Title"] = pageTitle;
+
+    var hasCurrentPhoto = !string.IsNullOrWhiteSpace(Model.CurrentPhotoPath);
 
     var reselectPhoto = ViewBag.ReselectPhoto as bool? == true;
 
@@ -14,13 +19,23 @@
         .Select(c => c.Text);
 }
 
-<a asp-controller="Equipment"
-   asp-action="Index"
-   class="back-link">&lt; Back to Equipment List</a>
+@if (Model.IsEdit)
+{
+    <a asp-controller="Equipment"
+       asp-action="Details"
+       asp-route-id="@Model.EquipmentId"
+       class="back-link">&lt; Back to Item Details</a>
+}
+else
+{
+    <a asp-controller="Equipment"
+       asp-action="Index"
+       class="back-link">&lt; Back to Equipment List</a>
+}
 
 <div class="form-panel mt-3">
 
-    <h2 class="h4 fw-bold mb-1">Add Equipment</h2>
+    <h2 class="h4 fw-bold mb-1">@pageTitle</h2>
 
     <p class="small mb-4">
         Fields marked <span class="required-mark">*</span> are required.
@@ -34,7 +49,8 @@
     }
 
     <form asp-controller="Equipment"
-          asp-action="Create"
+          asp-action="@(Model.IsEdit ? "Edit" : "Create")"
+          asp-route-id="@(Model.IsEdit ? Model.EquipmentId.ToString() : null)"
           method="post"
           enctype="multipart/form-data"
           data-submit-once>
@@ -128,11 +144,46 @@
                 <label asp-for="Status" class="form-label">
                     Status <span class="required-mark" aria-hidden="true">*</span>
                 </label>
-                <select asp-for="Status"
-                        asp-items="Model.Statuses"
-                        class="form-select">
-                </select>
+                @if (Model.StatusLocked)
+                {
+                    @* Checked Out and Retired are changed by returning or retiring the item *@
+                    <select asp-for="Status"
+                            asp-items="Model.Statuses"
+                            class="form-select"
+                            disabled
+                            aria-describedby="status-locked-help">
+                    </select>
+                    <div id="status-locked-help" class="form-text">
+                        @(Model.Status == "Retired"
+                            ? "Retired items keep this status."
+                            : "This item is checked out. Use Change Status on the item's page to mark it Lost.")
+                    </div>
+                }
+                else
+                {
+                    <select asp-for="Status"
+                            asp-items="Model.Statuses"
+                            class="form-select">
+                    </select>
+                }
                 <span asp-validation-for="Status"
+                      class="field-error small"></span>
+            </div>
+
+            @* Shown only when Under Repair is chosen, and required then *@
+            <div class="col-12 @(Model.Status == "Under Repair" ? "" : "d-none")"
+                 data-repair-note-for="Status">
+                <label asp-for="RepairNote" class="form-label">
+                    Repair Note <span class="required-mark" aria-hidden="true">*</span>
+                </label>
+                <textarea asp-for="RepairNote"
+                          class="form-control"
+                          rows="2"
+                          maxlength="255"
+                          placeholder="Screen cracked; sent to IT for replacement"
+                          aria-describedby="repair-note-count"></textarea>
+                <div id="repair-note-count" class="form-text" data-char-count></div>
+                <span asp-validation-for="RepairNote"
                       class="field-error small"></span>
             </div>
 
@@ -149,7 +200,26 @@
 
             @* Equip-8 *@
             <div class="col-12">
-                <label asp-for="Photo" class="form-label">Photo</label>
+                <label asp-for="Photo" class="form-label">
+                    @(hasCurrentPhoto ? "Replace Photo" : "Photo")
+                </label>
+
+                @* The current photo, with an option to remove it *@
+                @if (hasCurrentPhoto)
+                {
+                    <div class="d-flex flex-wrap align-items-center gap-3 mb-2">
+                        <img src="@Model.CurrentPhotoPath"
+                             alt="Current photo of @Model.Name"
+                             class="current-photo" />
+
+                        <div class="form-check">
+                            <input asp-for="RemovePhoto" class="form-check-input" />
+                            <label asp-for="RemovePhoto" class="form-check-label">
+                                Remove this photo
+                            </label>
+                        </div>
+                    </div>
+                }
                 <input asp-for="Photo"
                        type="file"
                        class="form-control"
@@ -173,14 +243,26 @@
         <div class="d-flex flex-wrap gap-2 mt-4">
             <button type="submit"
                     class="btn btn-outline-light fw-bold px-4">
-                Save
+                @(Model.IsEdit ? "Save Changes" : "Save")
             </button>
 
-            <a asp-controller="Equipment"
-               asp-action="Index"
-               class="btn btn-outline-secondary px-4">
-                Cancel
-            </a>
+            @if (Model.IsEdit)
+            {
+                <a asp-controller="Equipment"
+                   asp-action="Details"
+                   asp-route-id="@Model.EquipmentId"
+                   class="btn btn-outline-secondary px-4">
+                    Cancel
+                </a>
+            }
+            else
+            {
+                <a asp-controller="Equipment"
+                   asp-action="Index"
+                   class="btn btn-outline-secondary px-4">
+                    Cancel
+                </a>
+            }
         </div>
     </form>
 </div>

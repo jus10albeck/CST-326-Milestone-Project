@@ -60,6 +60,9 @@ namespace EquipmentInventoryApp.Migrations
                     b.Property<int>("EquipmentId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("MarkedLost")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<DateTime?>("ReturnDate")
                         .HasColumnType("datetime(6)");
 
@@ -145,6 +148,10 @@ namespace EquipmentInventoryApp.Migrations
                     b.Property<string>("PhotoPath")
                         .HasColumnType("longtext");
 
+                    b.Property<string>("RepairNote")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
                     b.Property<string>("SerialNumber")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -162,6 +169,43 @@ namespace EquipmentInventoryApp.Migrations
                         .IsUnique();
 
                     b.ToTable("Equipment");
+                });
+
+            modelBuilder.Entity("EquipmentInventoryApp.Models.EquipmentHistory", b =>
+                {
+                    b.Property<int>("EquipmentHistoryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("EquipmentHistoryId"));
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Details")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<int>("EquipmentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("PerformedByName")
+                        .HasMaxLength(201)
+                        .HasColumnType("varchar(201)");
+
+                    b.Property<int?>("PerformedByUserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("EquipmentHistoryId");
+
+                    b.HasIndex("EquipmentId");
+
+                    b.ToTable("EquipmentHistory");
                 });
 
             modelBuilder.Entity("EquipmentInventoryApp.Models.Notification", b =>

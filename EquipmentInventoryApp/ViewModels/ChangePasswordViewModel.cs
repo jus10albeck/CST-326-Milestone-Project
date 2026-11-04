@@ -11,7 +11,9 @@ namespace EquipmentInventoryApp.ViewModels
         public string CurrentPassword { get; set; } = string.Empty;
 
         [Required]
-        [StringLength(100, MinimumLength = 12)]
+        [StringLength(100, ErrorMessage = "Password must be 100 characters or fewer")]
+        [RegularExpression(EquipmentInventoryApp.Models.AccountRules.PasswordPattern,
+            ErrorMessage = EquipmentInventoryApp.Models.AccountRules.PasswordMessage)]
         [DataType(DataType.Password)]
         [Display(Name = "New Password")]
         public string NewPassword { get; set; } = string.Empty;

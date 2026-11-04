@@ -1,0 +1,62 @@
+﻿@model EquipmentInventoryApp.Models.Equipment
+
+@{
+    ViewData["Title"] = "Retire Equipment";
+
+    // Set when the item is checked out and cannot be retired yet
+    var blockedMessage = ViewBag.RetireBlockedMessage as string;
+}
+
+<a asp-controller="Equipment"
+   asp-action="Details"
+   asp-route-id="@Model.EquipmentId"
+   class="back-link">&lt; Back to Item Details</a>
+
+<div class="form-panel form-panel-narrow mt-3">
+
+    <h2 class="h4 fw-bold mb-3">Retire @Model.Name?</h2>
+
+    <dl class="detail-list mb-4">
+        <dt>Category</dt>
+        <dd>@Model.Category.CategoryName</dd>
+
+        <dt>Serial Number</dt>
+        <dd>@Model.SerialNumber</dd>
+
+        <dt>Status</dt>
+        <dd>@Model.Status</dd>
+    </dl>
+
+    @if (blockedMessage != null)
+    {
+        <div class="alert alert-warning small" role="alert">@blockedMessage</div>
+    }
+    else
+    {
+        <p>
+            Retiring removes this item from service. It stays in the Equipment List with a
+            "Retired" label, it can no longer be checked out, and its history is kept.
+        </p>
+    }
+
+    <form asp-controller="Equipment"
+          asp-action="Retire"
+          asp-route-id="@Model.EquipmentId"
+          method="post"
+          class="d-flex flex-wrap gap-2 mt-4"
+          data-submit-once>
+
+        <button type="submit"
+                class="btn btn-danger fw-bold px-4"
+                disabled="@(blockedMessage != null)">
+            Retire Item
+        </button>
+
+        <a asp-controller="Equipment"
+           asp-action="Details"
+           asp-route-id="@Model.EquipmentId"
+           class="btn btn-outline-secondary px-4">
+            Cancel
+        </a>
+    </form>
+</div>

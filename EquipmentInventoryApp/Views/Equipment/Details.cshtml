@@ -18,6 +18,20 @@
     // Reserved is shown while an Approved reservation covers today (FR-28)
     var displayStatus = ViewBag.DisplayStatus as string ?? Model.Status;
     var reservedForMe = ViewBag.ReservedForCurrentUser as bool? == true;
+
+    // Administrators only
+    var isAdmin = User.IsInRole("Administrator");
+    var activeCheckout = ViewBag.ActiveCheckout as EquipmentInventoryApp.Models.Checkout;
+    var isRetired = Model.Status == "Retired";
+
+    // What was typed before an error, so it can be shown again
+    var statusDraft = TempData["StatusDraft"] as string;
+    var repairNoteDraft = TempData["RepairNoteDraft"] as string;
+    var selectedStatus = statusDraft ?? Model.Status;
+    var repairNoteValue = repairNoteDraft ?? Model.RepairNote;
+
+    // Item History, newest first (administrators only)
+    var history = ViewBag.History as List<EquipmentInventoryApp.Services.ItemHistoryRow>;
 }
 
 <a asp-controller="Equipment"
@@ -76,11 +90,151 @@
                 }
             </dd>
 
+            @* Administrators see why an item is Under Repair *@
+            @if (isAdmin && Model.Status == "Under Repair" && !string.IsNullOrWhiteSpace(Model.RepairNote))
+            {
+                <dt>Repair Note</dt>
+                <dd>@Model.RepairNote</dd>
+            }
+
             <dt>Description</dt>
             <dd>@(string.IsNullOrWhiteSpace(Model.Description) ? "No description available." : Model.Description)</dd>
         </dl>
     </div>
 </div>
+
+@* Administrator actions: Edit (US-8), Change Status (US-10), and Retire (US-9) *@
+@if (isAdmin)
+{
+    <div class="detail-actions mt-4">
+
+        @if (activeCheckout != null)
+        {
+            <p class="mb-3">
+                Checked out to
+                <strong>@activeCheckout.User.FirstName @activeCheckout.User.LastName</strong>,
+                due @activeCheckout.DueDate.ToString("MM/dd/yyyy")@(activeCheckout.DueDate.Date < DateTime.Today ? " (Overdue)" : "").
+            </p>
+        }
+
+        @* Edit and Retire on one row; Change Status below *@
+        <div class="d-flex flex-wrap align-items-center gap-3">
+
+            <a asp-controller="Equipment"
+               asp-action="Edit"
+               asp-route-id="@Model.EquipmentId"
+               class="btn btn-outline-light fw-bold px-4">
+                Edit
+            </a>
+
+
+            <a asp-controller="Equipment"
+               asp-action="Retire"
+               asp-route-id="@Model.EquipmentId"
+               class="btn btn-outline-danger fw-bold px-4 @(isRetired ? "disabled" : "")"
+               title="Remove from service; history is kept"
+               aria-disabled="@(isRetired ? "true" : "false")">
+                Retire
+            </a>
+        </div>
+
+        @if (!isRetired)
+        {
+            @* A checked-out item can only be marked Lost from here *@
+            <form asp-controller="Equipment"
+                  asp-action="ChangeStatus"
+                  asp-route-id="@Model.EquipmentId"
+                  method="post"
+                  class="d-flex flex-wrap align-items-end gap-2 mt-3"
+                  data-submit-once>
+
+                <div>
+                    <label for="status-select" class="form-label small mb-1">Change Status</label>
+                    <select id="status-select"
+                            name="status"
+                            class="form-select status-select">
+                        @foreach (var status in EquipmentOptions.AdminStatuses)
+                        {
+                            var allowed = activeCheckout == null || status == "Lost";
+
+                            <option value="@status"
+                                    selected="@(status == selectedStatus)"
+                                    disabled="@(!allowed)">@status</option>
+                        }
+                    </select>
+                </div>
+
+                <button type="submit"
+                        class="btn btn-outline-light px-3">
+                    Update
+                </button>
+
+                @* Shown only when Under Repair is chosen, and required then *@
+                <div class="w-100 @(selectedStatus == "Under Repair" ? "" : "d-none")"
+                     data-repair-note-for="status-select">
+                    <label for="repair-note" class="form-label small mb-1">
+                        Repair Note <span class="required-mark" aria-hidden="true">*</span>
+                    </label>
+                    <textarea id="repair-note"
+                              name="repairNote"
+                              class="form-control repair-note-input"
+                              rows="2"
+                              maxlength="255"
+                              placeholder="Screen cracked; sent to IT for replacement"
+                              aria-describedby="repair-note-count">@repairNoteValue</textarea>
+                    <div id="repair-note-count" class="form-text" data-char-count></div>
+                </div>
+            </form>
+        }
+
+        @if (activeCheckout != null && !isRetired)
+        {
+            <p class="small mt-2 mb-0">
+                While the item is checked out, it can only be marked Lost. That closes the employee's checkout.
+            </p>
+        }
+    </div>
+}
+
+@* Item History (FR-32): checkouts, returns, status changes, and more. Administrators only. *@
+@if (isAdmin && history != null)
+{
+    <section class="mt-5" aria-labelledby="item-history-heading">
+        <h2 id="item-history-heading" class="h5 fw-bold mb-3">Item History</h2>
+
+        @if (!history.Any())
+        {
+            <p>No history has been recorded for this item yet.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table app-table mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col">Date</th>
+                            <th scope="col">Event</th>
+                            <th scope="col">Details</th>
+                            <th scope="col">By</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var row in history)
+                        {
+                            <tr>
+                                <td class="text-nowrap">@row.Date.ToString("MM/dd/yyyy h:mm tt")</td>
+                                <td class="text-nowrap">@row.Event</td>
+                                <td>@row.Details</td>
+                                <td>@row.By</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+}
 
 @* Employee actions. Check Out is enabled only when the item is Available
    and the employee is under the checkout limit. *@

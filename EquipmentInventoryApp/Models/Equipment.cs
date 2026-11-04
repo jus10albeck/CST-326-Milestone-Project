@@ -31,6 +31,11 @@ namespace EquipmentInventoryApp.Models
 
         public string? PhotoPath { get; set; }
 
+        // Why the item is Under Repair. Required when an administrator sets that status,
+        // and cleared when the status changes to something else.
+        [MaxLength(255)]
+        public string? RepairNote { get; set; }
+
         public Category Category { get; set; } = null!;
 
         public ICollection<Checkout> Checkouts { get; set; }

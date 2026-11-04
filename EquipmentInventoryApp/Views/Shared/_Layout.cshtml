@@ -23,6 +23,12 @@
           asp-append-version="true" />
 </head>
 
+@{
+    // True when the user signed in with a temporary password and must change it first
+    var mustChangePassword = User.FindFirst(
+        EquipmentInventoryApp.Services.MustChangePasswordFilter.ClaimType)?.Value == "true";
+}
+
 <body class="app-page">
     <header class="app-header">
 
@@ -43,10 +49,13 @@
 
                         <span class="app-divider" aria-hidden="true">|</span>
 
-                        <a asp-controller="Account"
-                           asp-action="ChangePassword">Change Password</a>
+                        @if (!mustChangePassword)
+                        {
+                            <a asp-controller="Account"
+                               asp-action="ChangePassword">Change Password</a>
 
-                        <span class="app-divider" aria-hidden="true">|</span>
+                            <span class="app-divider" aria-hidden="true">|</span>
+                        }
 
                         <form asp-controller="Account"
                               asp-action="Logout"
@@ -69,7 +78,7 @@
 
         @* Second row: page links for the user's role.
            More links will be added as their pages are built. *@
-        @if (User.Identity?.IsAuthenticated == true)
+        @if (User.Identity?.IsAuthenticated == true && !mustChangePassword)
         {
             <nav class="app-nav" aria-label="Main navigation">
                 <div class="container-fluid">
@@ -98,6 +107,11 @@
 
                         @if (User.IsInRole("Administrator"))
                         {
+                            <li>
+                                <a asp-controller="Users"
+                                   asp-action="Index">Users</a>
+                            </li>
+
                             <li>
                                 <a asp-controller="Categories"
                                    asp-action="Index">Categories</a>

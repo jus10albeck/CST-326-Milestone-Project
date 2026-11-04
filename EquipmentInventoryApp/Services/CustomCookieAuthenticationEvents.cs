@@ -31,6 +31,10 @@ namespace EquipmentInventoryApp.Services
             var role = context.Principal?
                 .FindFirstValue(ClaimTypes.Role);
 
+            // True when the user signed in with a temporary password
+            var signedInWithTemporaryPassword = context.Principal?
+                .FindFirstValue(MustChangePasswordFilter.ClaimType) == "true";
+
             // Makes sure the user ID and security stamp exist
             if (!int.TryParse(idValue, out int userId) ||
                 string.IsNullOrEmpty(stamp))
@@ -47,7 +51,7 @@ namespace EquipmentInventoryApp.Services
             // Checks if the account or login information has changed
             if (user == null ||
                 user.Status != "Active" ||
-                user.MustChangePassword ||
+                user.MustChangePassword != signedInWithTemporaryPassword ||
                 user.SecurityStamp != stamp ||
                 user.Role != role)
             {

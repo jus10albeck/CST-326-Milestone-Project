@@ -46,3 +46,34 @@ window.addEventListener("pageshow", function (event) {
         });
     });
 });
+
+// Shows the Repair Note box only when "Under Repair" is selected, makes it required then,
+// and counts the characters typed. The server checks the note again when saving.
+document.querySelectorAll("[data-repair-note-for]").forEach(function (group) {
+    var select = document.getElementById(group.dataset.repairNoteFor);
+    var textarea = group.querySelector("textarea");
+    var counter = group.querySelector("[data-char-count]");
+
+    if (!select || !textarea) {
+        return;
+    }
+
+    function updateVisibility() {
+        var isUnderRepair = select.value === "Under Repair";
+
+        group.classList.toggle("d-none", !isUnderRepair);
+        textarea.required = isUnderRepair;
+    }
+
+    function updateCount() {
+        if (counter) {
+            counter.textContent = textarea.value.length + " / " + textarea.maxLength + " characters";
+        }
+    }
+
+    select.addEventListener("change", updateVisibility);
+    textarea.addEventListener("input", updateCount);
+
+    updateVisibility();
+    updateCount();
+});

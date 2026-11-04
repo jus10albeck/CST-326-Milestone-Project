@@ -9,7 +9,9 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 // Sets up the MVC application
-builder.Services.AddControllersWithViews();
+// Blocks other pages until a temporary password is changed
+builder.Services.AddControllersWithViews(options =>
+    options.Filters.Add<MustChangePasswordFilter>());
 
 // Gets the connection to the MySQL database
 var connectionString = builder.Configuration
@@ -34,6 +36,12 @@ builder.Services.Configure<CheckoutOptions>(
     builder.Configuration.GetSection("Checkout"));
 
 builder.Services.AddScoped<CheckoutService>();
+
+// Records and reads each item's history
+builder.Services.AddScoped<EquipmentHistoryService>();
+
+// Rules for changing an item's status and retiring it
+builder.Services.AddScoped<EquipmentStatusService>();
 
 // Sets up login cookies and the 30-minute session
 builder.Services

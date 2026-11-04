@@ -1,6 +1,7 @@
 ﻿
 using EquipmentInventoryApp.Data;
 using EquipmentInventoryApp.Models;
+using EquipmentInventoryApp.Services;
 using EquipmentInventoryApp.ViewModels;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
@@ -44,39 +45,49 @@ namespace EquipmentInventoryApp.Controllers
                 return View(model);
             }
 
+            var email = model.Email.Trim();
+
             var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Email == model.Email);
+                .FirstOrDefaultAsync(u => u.Email == email);
 
-            // Makes sure the account exists and is active
-            if (user == null || user.Status != "Active")
+            // Checks the password first, so the message does not reveal
+            // whether an email address has an account
+            var result = user == null
+                ? PasswordVerificationResult.Failed
+                : _passwordHasher.VerifyHashedPassword(
+                    user,
+                    user.PasswordHash,
+                    model.Password);
+
+            if (user == null || result == PasswordVerificationResult.Failed)
             {
-                ModelState.AddModelError(
-                    "",
-                    "Invalid email, password, or account status.");
+                ModelState.AddModelError("", "Invalid email or password.");
 
                 return View(model);
             }
 
-            // Checks the password against the saved hash
-            var result = _passwordHasher.VerifyHashedPassword(
-                user,
-                user.PasswordHash,
-                model.Password);
-
-            if (result == PasswordVerificationResult.Failed)
+            // Deactivated and Pending accounts get their own messages (FR-5, Milestone 3)
+            if (user.Status == AccountRules.DeactivatedStatus)
             {
                 ModelState.AddModelError(
                     "",
-                    "Invalid email, password, or account status.");
+                    "This account has been deactivated. Contact an administrator.");
 
                 return View(model);
             }
 
-            if (user.MustChangePassword)
+            if (user.Status == AccountRules.PendingStatus)
             {
                 ModelState.AddModelError(
                     "",
-                    "A password change is required. Contact an administrator.");
+                    "Your account request is waiting for administrator approval.");
+
+                return View(model);
+            }
+
+            if (user.Status != AccountRules.ActiveStatus)
+            {
+                ModelState.AddModelError("", "Invalid email or password.");
 
                 return View(model);
             }
@@ -90,7 +101,26 @@ namespace EquipmentInventoryApp.Controllers
                 await _context.SaveChangesAsync();
             }
 
-            // Saves the user's information and security stamp for login
+            await SignInUserAsync(user);
+
+            // A temporary password must be changed before using the application
+            if (user.MustChangePassword)
+            {
+                return RedirectToAction(nameof(ChangePassword));
+            }
+
+            // Sends administrators to their dashboard
+            if (user.Role == "Administrator")
+            {
+                return RedirectToAction("Index", "Admin");
+            }
+
+            return RedirectToAction("Index", "Equipment");
+        }
+
+        // Saves the user's information and security stamp in the login cookie
+        private async Task SignInUserAsync(User user)
+        {
             var claims = new List<Claim>
             {
                 new Claim(
@@ -114,6 +144,11 @@ namespace EquipmentInventoryApp.Controllers
                     user.SecurityStamp)
             };
 
+            if (user.MustChangePassword)
+            {
+                claims.Add(new Claim(MustChangePasswordFilter.ClaimType, "true"));
+            }
+
             var identity = new ClaimsIdentity(
                 claims,
                 CookieAuthenticationDefaults.AuthenticationScheme);
@@ -121,14 +156,6 @@ namespace EquipmentInventoryApp.Controllers
             await HttpContext.SignInAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme,
                 new ClaimsPrincipal(identity));
-
-            // Sends administrators to their dashboard
-            if (user.Role == "Administrator")
-            {
-                return RedirectToAction("Index", "Admin");
-            }
-
-            return RedirectToAction("Index", "Equipment");
         }
 
         // Opens the change password page

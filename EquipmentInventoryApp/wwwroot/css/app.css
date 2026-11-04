@@ -357,3 +357,45 @@ body.app-page {
 .app-page tr.row-overdue .return-btn:hover {
   background-color: #333333;
 }
+
+/* ---------- User Management ---------- */
+
+.text-secondary-light {
+  color: #b5b5b5;
+}
+
+.app-page .btn-outline-success {
+  color: #4cd38a;
+  border-color: #4cd38a;
+}
+
+.app-page .btn-outline-success:hover {
+  color: #121212;
+  background-color: #4cd38a;
+  border-color: #4cd38a;
+}
+
+/* ---------- Edit, Change Status, and Retire ---------- */
+
+.current-photo {
+  width: 120px;
+  aspect-ratio: 4 / 3;
+  object-fit: contain;
+  background-color: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 0.5rem;
+}
+
+.status-select {
+  width: auto;
+  min-width: 170px;
+}
+
+.app-page .btn-outline-danger.disabled {
+  opacity: 0.45;
+}
+
+/* Repair note box under Change Status on the details page */
+.repair-note-input {
+  max-width: 520px;
+}
