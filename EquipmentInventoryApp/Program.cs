@@ -40,6 +40,15 @@ builder.Services.AddScoped<CheckoutService>();
 // Records and reads each item's history
 builder.Services.AddScoped<EquipmentHistoryService>();
 
+// Reads checkout history for items and employees
+builder.Services.AddScoped<CheckoutHistoryService>();
+
+// Notifications, damage reports, reservations, and dashboard counts
+builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<DamageReportService>();
+builder.Services.AddScoped<ReservationService>();
+builder.Services.AddScoped<DashboardService>();
+
 // Rules for changing an item's status and retiring it
 builder.Services.AddScoped<EquipmentStatusService>();
 

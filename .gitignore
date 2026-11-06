@@ -11,3 +11,6 @@ obj/
 # Equipment photos uploaded while testing
 EquipmentInventoryApp/wwwroot/uploads/
 
+
+# Preview screenshots saved by Claude
+Claude outputs/

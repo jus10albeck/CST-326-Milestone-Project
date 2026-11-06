@@ -20,6 +20,7 @@ namespace EquipmentInventoryApp.Controllers
         private readonly CheckoutService _checkoutService;
         private readonly EquipmentStatusService _statusService;
         private readonly EquipmentHistoryService _history;
+        private readonly CheckoutHistoryService _checkoutHistory;
 
         // Photo rules from the requirements: JPG or PNG, 5 MB or smaller
         private const long MaxPhotoBytes = 5 * 1024 * 1024;
@@ -30,9 +31,11 @@ namespace EquipmentInventoryApp.Controllers
             IWebHostEnvironment environment,
             CheckoutService checkoutService,
             EquipmentStatusService statusService,
-            EquipmentHistoryService history)
+            EquipmentHistoryService history,
+            CheckoutHistoryService checkoutHistory)
         {
             _history = history;
+            _checkoutHistory = checkoutHistory;
             _context = context;
             _environment = environment;
             _checkoutService = checkoutService;
@@ -115,7 +118,8 @@ namespace EquipmentInventoryApp.Controllers
         }
 
         // Gets the details for one equipment item
-        public async Task<IActionResult> Details(int? id)
+        // checkoutPage and changePage pick the page of each Item History table
+        public async Task<IActionResult> Details(int? id, int checkoutPage = 1, int changePage = 1)
         {
             var equipment = id == null
                 ? null
@@ -164,8 +168,12 @@ namespace EquipmentInventoryApp.Controllers
                 ViewBag.ActiveCheckout =
                     await _statusService.GetActiveCheckoutAsync(equipment.EquipmentId);
 
-                // Item History (FR-32), newest first
-                ViewBag.History = await _history.GetHistoryAsync(equipment.EquipmentId);
+                // Item History (FR-32, US-28): every checkout, plus recorded changes, newest first
+                ViewBag.CheckoutHistory =
+                    await _checkoutHistory.GetForItemAsync(equipment.EquipmentId, checkoutPage);
+
+                ViewBag.ChangeHistory =
+                    await _history.GetChangesAsync(equipment.EquipmentId, changePage);
             }
 
             return View(equipment);
@@ -460,6 +468,22 @@ namespace EquipmentInventoryApp.Controllers
             {
                 TempData["StatusDraft"] = status;
                 TempData["RepairNoteDraft"] = repairNote;
+            }
+
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        // Records a return on the employee's behalf (US-21)
+        [HttpPost]
+        [Authorize(Roles = "Administrator")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RecordReturn(int id)
+        {
+            var result = await _checkoutService.RecordReturnAsync(id, GetCurrentUserId() ?? 0);
+
+            if (!result.WasRepeat)
+            {
+                TempData[result.Succeeded ? "SuccessMessage" : "ErrorMessage"] = result.Message;
             }
 
             return RedirectToAction(nameof(Details), new { id });

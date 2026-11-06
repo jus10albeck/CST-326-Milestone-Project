@@ -1,6 +1,7 @@
 ﻿
 using EquipmentInventoryApp.Data;
 using EquipmentInventoryApp.Models;
+using EquipmentInventoryApp.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace EquipmentInventoryApp.Services
@@ -17,7 +18,7 @@ namespace EquipmentInventoryApp.Services
         public string? By { get; set; }
     }
 
-    // Records and reads each item's history (FR-32)
+    // Records and reads each item's change history (status changes, edits, retirement)
     public class EquipmentHistoryService
     {
         public const string Added = "Added";
@@ -64,61 +65,42 @@ namespace EquipmentInventoryApp.Services
             });
         }
 
-        // Builds the item's full history, newest first: recorded events plus
-        // every checkout and return from the Checkouts table
-        public async Task<List<ItemHistoryRow>> GetHistoryAsync(int equipmentId)
+        // The item's recorded changes (status changes, edits, retirement), newest first,
+        // one page at a time. Checkouts are shown separately by CheckoutHistoryService.
+        public async Task<PagedResult<ItemHistoryRow>> GetChangesAsync(int equipmentId, int page)
         {
-            var rows = new List<ItemHistoryRow>();
+            const int pageSize = 10;
 
-            var events = await _context.EquipmentHistory
+            var events = _context.EquipmentHistory
                 .AsNoTracking()
-                .Where(h => h.EquipmentId == equipmentId)
+                .Where(h => h.EquipmentId == equipmentId);
+
+            var totalCount = await events.CountAsync(h => true);
+
+            page = PagedResult<ItemHistoryRow>.ClampPage(page, totalCount, pageSize);
+
+            var rows = await events
+                .OrderByDescending(h => h.Date)
+                .ThenByDescending(h => h.EquipmentHistoryId)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
 
-            rows.AddRange(events.Select(h => new ItemHistoryRow
+            return new PagedResult<ItemHistoryRow>
             {
-                Date = h.Date,
-                Event = h.EventType,
-                Details = h.Details,
-                By = h.PerformedByName
-            }));
-
-            var checkouts = await _context.Checkouts
-                .Include(c => c.User)
-                .AsNoTracking()
-                .Where(c => c.EquipmentId == equipmentId)
-                .ToListAsync();
-
-            foreach (var checkout in checkouts)
-            {
-                var employee = $"{checkout.User.FirstName} {checkout.User.LastName}";
-
-                rows.Add(new ItemHistoryRow
-                {
-                    Date = checkout.CheckoutDate,
-                    Event = "Checked Out",
-                    Details = $"Due {checkout.DueDate:MM/dd/yyyy}",
-                    By = employee
-                });
-
-                // Lost items are recorded as their own event when they are marked Lost
-                if (checkout.ReturnDate.HasValue && !checkout.MarkedLost)
-                {
-                    var daysLate = (checkout.ReturnDate.Value.Date - checkout.DueDate.Date).Days;
-
-                    rows.Add(new ItemHistoryRow
+                Page = page,
+                PageSize = pageSize,
+                TotalCount = totalCount,
+                Items = rows
+                    .Select(h => new ItemHistoryRow
                     {
-                        Date = checkout.ReturnDate.Value,
-                        Event = "Returned",
-                        Details = daysLate > 0 ? $"{daysLate} day(s) late" : "On time",
-                        By = employee
-                    });
-                }
-            }
-
-            return rows
-                .OrderByDescending(r => r.Date)
-                .ToList();
+                        Date = h.Date,
+                        Event = h.EventType,
+                        Details = h.Details,
+                        By = h.PerformedByName
+                    })
+                    .ToList()
+            };
         }
 
         private static string? Shorten(string? text, int maxLength)

@@ -15,13 +15,16 @@ namespace EquipmentInventoryApp.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly CheckoutService _checkoutService;
+        private readonly CheckoutHistoryService _checkoutHistory;
 
         public CheckoutsController(
             ApplicationDbContext context,
-            CheckoutService checkoutService)
+            CheckoutService checkoutService,
+            CheckoutHistoryService checkoutHistory)
         {
             _context = context;
             _checkoutService = checkoutService;
+            _checkoutHistory = checkoutHistory;
         }
 
         // Checks out an item from its details page (US-18)
@@ -94,6 +97,15 @@ namespace EquipmentInventoryApp.Controllers
                     })
                     .ToList()
             };
+
+            return View(model);
+        }
+
+        // Lists every item the employee has checked out, past and current, newest first (US-27)
+        [HttpGet]
+        public async Task<IActionResult> History(int page = 1)
+        {
+            var model = await _checkoutHistory.GetForUserAsync(GetUserId(), page);
 
             return View(model);
         }

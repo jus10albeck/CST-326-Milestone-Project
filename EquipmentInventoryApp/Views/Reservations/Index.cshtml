@@ -1,0 +1,93 @@
+﻿@model EquipmentInventoryApp.ViewModels.PagedResult<EquipmentInventoryApp.Services.PendingReservationRow>
+
+@{
+    ViewData["Title"] = "Reservations";
+}
+
+<h2 class="h4 fw-bold mb-1">Reservations</h2>
+<p class="mb-4">Pending requests, soonest first. Approving creates a notification for the employee.</p>
+
+@if (Model.TotalCount == 0)
+{
+    <p>There are no pending reservation requests.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table app-table mb-0">
+            <thead>
+                <tr>
+                    <th scope="col">Item</th>
+                    <th scope="col">Employee</th>
+                    <th scope="col">Date Range</th>
+                    <th scope="col" class="text-end">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var request in Model.Items)
+                {
+                    var canApprove = !request.OverlapsApproved && !request.ItemRetired;
+
+                    <tr>
+                        <td>
+                            <a asp-controller="Equipment"
+                               asp-action="Details"
+                               asp-route-id="@request.EquipmentId">@request.ItemName</a>
+                            <div class="small">@request.SerialNumber</div>
+                        </td>
+                        <td>@request.EmployeeName</td>
+                        <td class="text-nowrap">
+                            @request.StartDate.ToString("MM/dd/yyyy") to @request.EndDate.ToString("MM/dd/yyyy")
+
+                            @* Explains why Approve is disabled *@
+                            @if (request.OverlapsApproved)
+                            {
+                                <div class="field-error small">This request overlaps an existing reservation.</div>
+                            }
+                            else if (request.ItemRetired)
+                            {
+                                <div class="field-error small">This item has been retired.</div>
+                            }
+                        </td>
+                        <td class="text-end">
+                            <div class="d-flex flex-wrap justify-content-end gap-2">
+                                <form asp-controller="Reservations"
+                                      asp-action="Approve"
+                                      asp-route-id="@request.ReservationId"
+                                      asp-route-page="@Model.Page"
+                                      method="post"
+                                      class="m-0"
+                                      data-submit-once>
+                                    <button type="submit"
+                                            class="btn btn-sm btn-outline-success"
+                                            disabled="@(!canApprove)"
+                                            aria-label="Approve request from @request.EmployeeName for @request.ItemName">
+                                        Approve
+                                    </button>
+                                </form>
+
+                                <form asp-controller="Reservations"
+                                      asp-action="Deny"
+                                      asp-route-id="@request.ReservationId"
+                                      asp-route-page="@Model.Page"
+                                      method="post"
+                                      class="m-0"
+                                      data-submit-once>
+                                    <button type="submit"
+                                            class="btn btn-sm btn-outline-danger"
+                                            aria-label="Deny request from @request.EmployeeName for @request.ItemName">
+                                        Deny
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <partial name="_Pager"
+             model="@(new EquipmentInventoryApp.ViewModels.PagerViewModel { Page = Model.Page, TotalPages = Model.TotalPages, PageParameter = "page", Label = "Reservation requests" })" />
+}

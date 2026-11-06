@@ -66,6 +66,9 @@ namespace EquipmentInventoryApp.Migrations
                     b.Property<DateTime?>("ReturnDate")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<int?>("ReturnRecordedByUserId")
+                        .HasColumnType("int");
+
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 

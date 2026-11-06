@@ -1,0 +1,88 @@
+﻿@model EquipmentInventoryApp.ViewModels.PagedResult<EquipmentInventoryApp.Services.DamageReportRow>
+
+@{
+    ViewData["Title"] = "Damage Reports";
+}
+
+<h2 class="h4 fw-bold mb-1">Damage Reports</h2>
+<p class="mb-4">
+    Open reports, newest first. Mark Under Repair takes the item out of service;
+    Close Report closes the report once it has been handled.
+</p>
+
+@if (Model.TotalCount == 0)
+{
+    <p>There are no open damage reports.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table app-table mb-0">
+            <thead>
+                <tr>
+                    <th scope="col">Item</th>
+                    <th scope="col">Reporter</th>
+                    <th scope="col">Date</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Item Status</th>
+                    <th scope="col" class="text-end">Actions</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var report in Model.Items)
+                {
+                    var canMarkUnderRepair = report.ItemStatus != "Under Repair" && report.ItemStatus != "Retired";
+
+                    <tr>
+                        <td>
+                            <a asp-controller="Equipment"
+                               asp-action="Details"
+                               asp-route-id="@report.EquipmentId">@report.ItemName</a>
+                            <div class="small">@report.SerialNumber</div>
+                        </td>
+                        <td>@report.ReporterName</td>
+                        <td class="text-nowrap">@report.ReportDate.ToString("MM/dd/yyyy")</td>
+                        <td class="report-description">@report.Description</td>
+                        <td class="text-nowrap">@report.ItemStatus</td>
+                        <td class="text-end">
+                            <div class="d-flex flex-wrap justify-content-end gap-2">
+                                <form asp-controller="DamageReports"
+                                      asp-action="MarkUnderRepair"
+                                      asp-route-id="@report.DamageReportId"
+                                      asp-route-page="@Model.Page"
+                                      method="post"
+                                      class="m-0"
+                                      data-submit-once>
+                                    <button type="submit"
+                                            class="btn btn-sm btn-outline-light text-nowrap"
+                                            disabled="@(!canMarkUnderRepair)"
+                                            aria-label="Mark @report.ItemName Under Repair">
+                                        Mark Under Repair
+                                    </button>
+                                </form>
+
+                                <form asp-controller="DamageReports"
+                                      asp-action="Close"
+                                      asp-route-id="@report.DamageReportId"
+                                      asp-route-page="@Model.Page"
+                                      method="post"
+                                      class="m-0"
+                                      data-submit-once>
+                                    <button type="submit"
+                                            class="btn btn-sm btn-outline-secondary text-nowrap"
+                                            aria-label="Close report for @report.ItemName">
+                                        Close Report
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <partial name="_Pager"
+             model="@(new EquipmentInventoryApp.ViewModels.PagerViewModel { Page = Model.Page, TotalPages = Model.TotalPages, PageParameter = "page", Label = "Damage reports" })" />
+}

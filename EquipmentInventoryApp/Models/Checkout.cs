@@ -25,6 +25,10 @@ namespace EquipmentInventoryApp.Models
         // True when the checkout ended because the item was marked Lost instead of returned
         public bool MarkedLost { get; set; }
 
+        // The administrator who recorded the return on the employee's behalf (US-21).
+        // Empty when the employee returned the item themselves.
+        public int? ReturnRecordedByUserId { get; set; }
+
         public User User { get; set; } = null!;
 
         public Equipment Equipment { get; set; } = null!;

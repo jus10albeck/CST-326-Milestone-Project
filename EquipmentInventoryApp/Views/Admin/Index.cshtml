@@ -6,8 +6,19 @@
 
 <h1 class="visually-hidden">Admin Dashboard</h1>
 
-@* Summary cards *@
-<div class="row row-cols-2 row-cols-lg-4 g-3 g-lg-4 mb-5">
+@* Summary cards. Each count is queried fresh on every page load (FR-39),
+   and selecting one opens the matching list (FR-40). *@
+<div class="row row-cols-2 row-cols-md-3 row-cols-xl-5 g-3 g-lg-4 mb-5">
+
+    <div class="col">
+        <div class="stat-card">
+            <div class="stat-number">@Model.TotalEquipmentCount</div>
+            <div class="stat-label">Total Equipment</div>
+            <a asp-controller="Equipment"
+               asp-action="Index"
+               class="stat-link">View List &gt;</a>
+        </div>
+    </div>
 
     <div class="col">
         <div class="stat-card">
@@ -24,7 +35,8 @@
         <div class="stat-card">
             <div class="stat-number">@Model.OverdueCount</div>
             <div class="stat-label">Overdue</div>
-            <a href="#overdue-equipment"
+            <a asp-controller="Admin"
+               asp-action="Overdue"
                class="stat-link">View List &gt;</a>
         </div>
     </div>
@@ -52,8 +64,17 @@
     </div>
 </div>
 
-@* Overdue equipment list *@
-<h2 id="overdue-equipment" class="h5 fw-bold mb-3">Overdue Equipment</h2>
+@* The most overdue items; the full list is on the Overdue List page *@
+<div class="d-flex flex-wrap align-items-baseline justify-content-between gap-2 mb-3">
+    <h2 id="overdue-equipment" class="h5 fw-bold mb-0">Overdue Equipment</h2>
+
+    @if (Model.OverdueCount > Model.OverdueItems.Count)
+    {
+        <a asp-controller="Admin" asp-action="Overdue" class="small">
+            View all @Model.OverdueCount overdue items &gt;
+        </a>
+    }
+</div>
 
 <div class="table-responsive">
     <table class="table app-table mb-0">

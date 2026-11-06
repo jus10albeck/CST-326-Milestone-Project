@@ -1,0 +1,65 @@
+﻿@model EquipmentInventoryApp.ViewModels.PagedResult<EquipmentInventoryApp.Services.CheckoutHistoryRow>
+
+@{
+    ViewData["Title"] = "Checkout History";
+}
+
+<h2 class="h4 fw-bold mb-1">Checkout History</h2>
+<p class="mb-4">Every item you have checked out, newest first.</p>
+
+@if (Model.TotalCount == 0)
+{
+    <p>
+        You have not checked out any equipment yet.
+        <a asp-controller="Equipment" asp-action="Index">Browse the Equipment List</a>
+        to find an item.
+    </p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table app-table mb-0">
+            <thead>
+                <tr>
+                    <th scope="col">Item</th>
+                    <th scope="col">Serial</th>
+                    <th scope="col">Checked Out</th>
+                    <th scope="col">Due Date</th>
+                    <th scope="col">Returned</th>
+                    <th scope="col">Result</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var row in Model.Items)
+                {
+                    @* Overdue rows are highlighted and labeled, so color is not the only signal *@
+                    <tr class="@(row.IsOverdue ? "row-overdue" : "")">
+                        <td>
+                            <a asp-controller="Equipment"
+                               asp-action="Details"
+                               asp-route-id="@row.EquipmentId">@row.ItemName</a>
+                        </td>
+                        <td>@row.SerialNumber</td>
+                        <td>@row.CheckoutDate.ToString("MM/dd/yyyy")</td>
+                        <td>@row.DueDate.ToString("MM/dd/yyyy")</td>
+                        <td>
+                            @(row.ReturnDate.HasValue && !row.MarkedLost
+                                ? row.ReturnDate.Value.ToString("MM/dd/yyyy")
+                                : "-")
+
+                            @if (row.RecordedByName != null)
+                            {
+                                <div class="small">Recorded by an administrator</div>
+                            }
+                        </td>
+                        <td class="@(row.IsOverdue ? "fw-bold" : "")">@row.Result</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <partial name="_Pager"
+             model="@(new EquipmentInventoryApp.ViewModels.PagerViewModel { Page = Model.Page, TotalPages = Model.TotalPages, PageParameter = "page", Label = "Checkout History" })" />
+}

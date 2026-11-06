@@ -1,61 +1,35 @@
 ﻿
-using EquipmentInventoryApp.Data;
-using EquipmentInventoryApp.ViewModels;
+using EquipmentInventoryApp.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace EquipmentInventoryApp.Controllers
 {
     [Authorize(Roles = "Administrator")]
     public class AdminController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly DashboardService _dashboard;
 
-        public AdminController(ApplicationDbContext context)
+        public AdminController(DashboardService dashboard)
         {
-            _context = context;
+            _dashboard = dashboard;
         }
 
-        // Opens the administrator dashboard
+        // Opens the administrator dashboard. The counts are queried from the database
+        // on every page load (FR-39), and the browser is told not to keep an old copy.
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
         public async Task<IActionResult> Index()
         {
-            var today = DateTime.Today;
+            var model = await _dashboard.GetDashboardAsync();
 
-            // Counts equipment by its current status
-            var model = new AdminDashboardViewModel
-            {
-                CheckedOutCount = await _context.Equipment
-                    .CountAsync(e => e.Status == "Checked Out"),
+            return View(model);
+        }
 
-                UnderRepairCount = await _context.Equipment
-                    .CountAsync(e => e.Status == "Under Repair"),
-
-                LostCount = await _context.Equipment
-                    .CountAsync(e => e.Status == "Lost")
-            };
-
-            // Finds checkouts that have not been returned and are past due
-            var overdueCheckouts = await _context.Checkouts
-                .Include(c => c.Equipment)
-                .Include(c => c.User)
-                .AsNoTracking()
-                .Where(c => c.ReturnDate == null && c.DueDate < today)
-                .OrderBy(c => c.DueDate)
-                .ToListAsync();
-
-            model.OverdueItems = overdueCheckouts
-                .Select(c => new OverdueItemViewModel
-                {
-                    EquipmentId = c.EquipmentId,
-                    ItemName = c.Equipment.Name,
-                    EmployeeName = $"{c.User.FirstName} {c.User.LastName}",
-                    DueDate = c.DueDate,
-                    DaysOverdue = (today - c.DueDate.Date).Days
-                })
-                .ToList();
-
-            model.OverdueCount = model.OverdueItems.Count;
+        // Lists every overdue checkout, most overdue first (US-35, FR-41)
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public async Task<IActionResult> Overdue(int page = 1)
+        {
+            var model = await _dashboard.GetOverdueListAsync(page);
 
             return View(model);
         }

@@ -1,0 +1,54 @@
+﻿@model EquipmentInventoryApp.ViewModels.PagedResult<EquipmentInventoryApp.ViewModels.OverdueItemViewModel>
+
+@{
+    ViewData["Title"] = "Overdue List";
+}
+
+<h2 class="h4 fw-bold mb-1">Overdue List</h2>
+<p class="mb-4">
+    Every checkout past its due date, most overdue first.
+    Open an item to record its return.
+</p>
+
+@if (Model.TotalCount == 0)
+{
+    <p>No equipment is overdue.</p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table app-table mb-0">
+            <thead>
+                <tr>
+                    <th scope="col">Item</th>
+                    <th scope="col">Serial Number</th>
+                    <th scope="col">Employee</th>
+                    <th scope="col">Due Date</th>
+                    <th scope="col">Days Overdue</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>
+                            <a asp-controller="Equipment"
+                               asp-action="Details"
+                               asp-route-id="@item.EquipmentId">@item.ItemName</a>
+                        </td>
+                        <td>@item.SerialNumber</td>
+                        <td>@item.EmployeeName</td>
+                        <td>@item.DueDate.ToString("MM/dd/yyyy")</td>
+                        <td>@item.DaysOverdue</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <p class="small mt-2 mb-0">@Model.TotalCount overdue item(s) in total.</p>
+
+    <partial name="_Pager"
+             model="@(new EquipmentInventoryApp.ViewModels.PagerViewModel { Page = Model.Page, TotalPages = Model.TotalPages, PageParameter = "page", Label = "Overdue List" })" />
+}

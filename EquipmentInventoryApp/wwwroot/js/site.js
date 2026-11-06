@@ -77,3 +77,20 @@ document.querySelectorAll("[data-repair-note-for]").forEach(function (group) {
     updateVisibility();
     updateCount();
 });
+
+// Counts the characters typed in boxes such as the damage report description
+document.querySelectorAll("[data-char-count-group]").forEach(function (group) {
+    var textarea = group.querySelector("textarea");
+    var counter = group.querySelector("[data-char-count]");
+
+    if (!textarea || !counter) {
+        return;
+    }
+
+    function updateCount() {
+        counter.textContent = textarea.value.length + " / " + textarea.maxLength + " characters";
+    }
+
+    textarea.addEventListener("input", updateCount);
+    updateCount();
+});

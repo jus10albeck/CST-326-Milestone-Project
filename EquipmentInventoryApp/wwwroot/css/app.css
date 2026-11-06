@@ -399,3 +399,20 @@ body.app-page {
 .repair-note-input {
   max-width: 520px;
 }
+
+/* Previous / Next links under history tables */
+.app-page .pager .disabled {
+  opacity: 0.4;
+}
+
+/* ---------- Damage reports, reservations, notifications ---------- */
+
+.report-description {
+  min-width: 220px;
+  max-width: 420px;
+  white-space: pre-line;
+}
+
+.notification-area .alert {
+  border-radius: 0.75rem;
+}

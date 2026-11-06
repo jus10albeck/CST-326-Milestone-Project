@@ -247,9 +247,69 @@ namespace EquipmentInventoryApp.Services
             };
         }
 
+        // Records a return on an employee's behalf (US-21). The return date and history are
+        // kept the same as when the employee returns it, plus which administrator recorded it.
+        public async Task<CheckoutResult> RecordReturnAsync(int equipmentId, int administratorId)
+        {
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+
+            var checkout = await _context.Checkouts
+                .Include(c => c.Equipment)
+                .Include(c => c.User)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.EquipmentId == equipmentId && c.ReturnDate == null);
+
+            if (checkout == null)
+            {
+                // A repeat of a return this administrator just recorded (for example, a double-click)
+                var justReturned = DateTime.Now.AddMinutes(-RepeatWindowMinutes);
+
+                if (await _context.Checkouts.AnyAsync(c =>
+                    c.EquipmentId == equipmentId &&
+                    c.ReturnRecordedByUserId == administratorId &&
+                    c.ReturnDate >= justReturned))
+                {
+                    return Repeat();
+                }
+
+                return Fail("This item is not checked out.");
+            }
+
+            // Records the return only if it has not been recorded yet
+            var returned = await _context.Checkouts
+                .Where(c => c.CheckoutId == checkout.CheckoutId && c.ReturnDate == null)
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(c => c.ReturnDate, DateTime.Now)
+                    .SetProperty(c => c.ReturnRecordedByUserId, administratorId));
+
+            if (returned == 0)
+            {
+                await transaction.RollbackAsync();
+
+                return Fail("This item is not checked out.");
+            }
+
+            // Sets the item back to Available, keeping any other status an administrator set
+            await _context.Equipment
+                .Where(e => e.EquipmentId == equipmentId && e.Status == CheckedOutStatus)
+                .ExecuteUpdateAsync(s => s.SetProperty(e => e.Status, AvailableStatus));
+
+            await transaction.CommitAsync();
+
+            var employee = $"{checkout.User.FirstName} {checkout.User.LastName}";
+
+            return new CheckoutResult
+            {
+                Succeeded = true,
+                ItemName = checkout.Equipment.Name,
+                Message = $"Return recorded for {checkout.Equipment.Name} on {employee}'s behalf."
+            };
+        }
+
         // Ends every checkout a user has, such as before their account is deactivated (US-21).
         // Items in lostEquipmentIds are marked Lost; the rest are returned and set to Available.
         // Call inside a transaction so it saves together with the other changes.
+        // The administrator who deactivated the account is saved as the one who recorded the returns.
         public async Task<(int Returned, int Lost)> CloseAllForUserAsync(
             int userId,
             ISet<int> lostEquipmentIds,
@@ -290,13 +350,16 @@ namespace EquipmentInventoryApp.Services
             // Records the end date on each checkout. The records are kept for history.
             var returned = await _context.Checkouts
                 .Where(c => returnCheckoutIds.Contains(c.CheckoutId) && c.ReturnDate == null)
-                .ExecuteUpdateAsync(s => s.SetProperty(c => c.ReturnDate, now));
+                .ExecuteUpdateAsync(s => s
+                    .SetProperty(c => c.ReturnDate, now)
+                    .SetProperty(c => c.ReturnRecordedByUserId, performedByUserId));
 
             var lost = await _context.Checkouts
                 .Where(c => lostCheckoutIds.Contains(c.CheckoutId) && c.ReturnDate == null)
                 .ExecuteUpdateAsync(s => s
                     .SetProperty(c => c.ReturnDate, now)
-                    .SetProperty(c => c.MarkedLost, true));
+                    .SetProperty(c => c.MarkedLost, true)
+                    .SetProperty(c => c.ReturnRecordedByUserId, performedByUserId));
 
             // Returned items go back to Available and lost items are marked Lost,
             // keeping any other status an administrator already set

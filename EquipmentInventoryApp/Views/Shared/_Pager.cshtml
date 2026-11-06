@@ -1,0 +1,44 @@
+﻿@model EquipmentInventoryApp.ViewModels.PagerViewModel
+
+@{
+    // Builds a link to another page, keeping the rest of the address the same
+    string PageLink(int page)
+    {
+        var query = Context.Request.Query
+            .ToDictionary(q => q.Key, q => (string?)q.Value.ToString());
+
+        query[Model.PageParameter] = page.ToString();
+
+        var anchor = Model.Anchor == null ? "" : "#" + Model.Anchor;
+
+        return Context.Request.Path + QueryString.Create(query).ToString() + anchor;
+    }
+}
+
+@* Only shown when there is more than one page *@
+@if (Model.TotalPages > 1)
+{
+    <nav class="pager d-flex flex-wrap align-items-center gap-3 mt-2"
+         aria-label="@Model.Label pages">
+
+        @if (Model.Page > 1)
+        {
+            <a href="@PageLink(Model.Page - 1)" class="btn btn-sm btn-outline-light">&lt; Previous</a>
+        }
+        else
+        {
+            <span class="btn btn-sm btn-outline-light disabled" aria-disabled="true">&lt; Previous</span>
+        }
+
+        <span class="small">Page @Model.Page of @Model.TotalPages</span>
+
+        @if (Model.Page < Model.TotalPages)
+        {
+            <a href="@PageLink(Model.Page + 1)" class="btn btn-sm btn-outline-light">Next &gt;</a>
+        }
+        else
+        {
+            <span class="btn btn-sm btn-outline-light disabled" aria-disabled="true">Next &gt;</span>
+        }
+    </nav>
+}

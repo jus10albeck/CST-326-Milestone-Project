@@ -4,6 +4,8 @@ namespace EquipmentInventoryApp.ViewModels
     // Holds the numbers and overdue list shown on the administrator dashboard
     public class AdminDashboardViewModel
     {
+        public int TotalEquipmentCount { get; set; }
+
         public int CheckedOutCount { get; set; }
 
         public int OverdueCount { get; set; }
@@ -22,6 +24,8 @@ namespace EquipmentInventoryApp.ViewModels
         public int EquipmentId { get; set; }
 
         public string ItemName { get; set; } = string.Empty;
+
+        public string SerialNumber { get; set; } = string.Empty;
 
         public string EmployeeName { get; set; } = string.Empty;
 

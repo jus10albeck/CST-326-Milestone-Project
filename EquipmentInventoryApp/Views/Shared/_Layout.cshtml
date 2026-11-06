@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@inject EquipmentInventoryApp.Services.NotificationService NotificationService
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -103,6 +104,11 @@
                                 <a asp-controller="Checkouts"
                                    asp-action="MyEquipment">My Equipment</a>
                             </li>
+
+                            <li>
+                                <a asp-controller="Checkouts"
+                                   asp-action="History">Checkout History</a>
+                            </li>
                         }
 
                         @if (User.IsInRole("Administrator"))
@@ -115,6 +121,21 @@
                             <li>
                                 <a asp-controller="Categories"
                                    asp-action="Index">Categories</a>
+                            </li>
+
+                            <li>
+                                <a asp-controller="Reservations"
+                                   asp-action="Index">Reservations</a>
+                            </li>
+
+                            <li>
+                                <a asp-controller="DamageReports"
+                                   asp-action="Index">Damage Reports</a>
+                            </li>
+
+                            <li>
+                                <a asp-controller="Admin"
+                                   asp-action="Overdue">Overdue List</a>
                             </li>
                         }
                     </ul>
@@ -137,6 +158,56 @@
                             data-bs-dismiss="alert"
                             aria-label="Close"></button>
                 </div>
+            }
+
+            @* Unread notifications, shown on every page until dismissed (FR-37) *@
+            @if (User.Identity?.IsAuthenticated == true && !mustChangePassword &&
+                 int.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var currentUserId))
+            {
+                var unread = await NotificationService.GetUnreadAsync(currentUserId);
+                var returnUrl = Context.Request.Path + Context.Request.QueryString;
+
+                if (unread.Any())
+                {
+                    <section class="notification-area mb-3" aria-label="Notifications">
+                        @foreach (var notification in unread.Take(EquipmentInventoryApp.Services.NotificationService.MaxShown))
+                        {
+                            <div class="alert alert-info d-flex flex-wrap align-items-start justify-content-between gap-2 mb-2"
+                                 role="status">
+                                <div>
+                                    <span class="small fw-bold">@notification.CreatedDate.ToString("MM/dd/yyyy h:mm tt")</span>
+                                    <div>@notification.Message</div>
+                                </div>
+
+                                <form asp-controller="Notifications"
+                                      asp-action="Dismiss"
+                                      asp-route-id="@notification.NotificationId"
+                                      method="post"
+                                      class="m-0">
+                                    <input type="hidden" name="returnUrl" value="@returnUrl" />
+                                    <button type="submit" class="btn btn-sm btn-outline-dark">Dismiss</button>
+                                </form>
+                            </div>
+                        }
+
+                        @if (unread.Count > 1)
+                        {
+                            <form asp-controller="Notifications"
+                                  asp-action="DismissAll"
+                                  method="post"
+                                  class="d-flex flex-wrap align-items-center gap-2 m-0">
+                                <input type="hidden" name="returnUrl" value="@returnUrl" />
+                                @if (unread.Count > EquipmentInventoryApp.Services.NotificationService.MaxShown)
+                                {
+                                    <span class="small">
+                                        @(unread.Count - EquipmentInventoryApp.Services.NotificationService.MaxShown) more not shown.
+                                    </span>
+                                }
+                                <button type="submit" class="btn btn-sm btn-outline-light">Dismiss All</button>
+                            </form>
+                        }
+                    </section>
+                }
             }
 
             @* Shows a one-time error message *@

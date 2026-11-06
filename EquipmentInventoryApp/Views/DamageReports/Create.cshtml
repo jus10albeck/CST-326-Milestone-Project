@@ -1,0 +1,61 @@
+﻿@model EquipmentInventoryApp.ViewModels.DamageReportFormViewModel
+
+@{
+    ViewData["Title"] = "Report Damage";
+}
+
+<a asp-controller="Equipment"
+   asp-action="Details"
+   asp-route-id="@Model.EquipmentId"
+   class="back-link">&lt; Back to Item Details</a>
+
+<div class="form-panel form-panel-narrow mt-3">
+
+    <h2 class="h4 fw-bold mb-1">Report Damage</h2>
+
+    <p class="small mb-4">
+        @Model.ItemName (@Model.SerialNumber). Describe what is damaged or not working.
+        An administrator will be notified and will review the report.
+    </p>
+
+    <form asp-controller="DamageReports"
+          asp-action="Create"
+          method="post"
+          data-submit-once>
+
+        <input type="hidden" asp-for="EquipmentId" />
+
+        @* Field Dmg-1: required, 10 to 500 characters *@
+        <div class="mb-3" data-char-count-group>
+            <label asp-for="Description" class="form-label">
+                Description <span class="required-mark" aria-hidden="true">*</span>
+            </label>
+            <textarea asp-for="Description"
+                      class="form-control"
+                      rows="5"
+                      minlength="10"
+                      maxlength="500"
+                      placeholder="Screen flickers when opened"
+                      aria-describedby="description-count"></textarea>
+            <div id="description-count" class="form-text" data-char-count></div>
+            <span asp-validation-for="Description" class="field-error small"></span>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 mt-4">
+            <button type="submit" class="btn btn-outline-light fw-bold px-4">
+                Submit Report
+            </button>
+
+            <a asp-controller="Equipment"
+               asp-action="Details"
+               asp-route-id="@Model.EquipmentId"
+               class="btn btn-outline-secondary px-4">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
