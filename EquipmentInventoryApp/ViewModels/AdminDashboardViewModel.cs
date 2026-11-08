@@ -14,6 +14,9 @@ namespace EquipmentInventoryApp.ViewModels
 
         public int LostCount { get; set; }
 
+        // Reservation requests waiting for an administrator to approve or deny
+        public int PendingReservationCount { get; set; }
+
         public List<OverdueItemViewModel> OverdueItems { get; set; }
             = new List<OverdueItemViewModel>();
     }

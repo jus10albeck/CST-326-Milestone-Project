@@ -7,10 +7,27 @@
 <div class="d-flex flex-wrap align-items-baseline justify-content-between gap-2 mb-3">
     <h2 class="h4 fw-bold mb-0">My Equipment</h2>
 
-    <span class="small">
-        @Model.Items.Count of @Model.MaxActiveCheckouts items checked out
-    </span>
+    <div class="d-flex flex-wrap align-items-center gap-3">
+        <span class="small">
+            @Model.Items.Count of @Model.MaxActiveCheckouts items checked out
+        </span>
+
+        @* Opens the print-friendly view: no navigation or buttons (FR-38) *@
+        @if (Model.Items.Any())
+        {
+            <button type="button"
+                    class="btn btn-sm btn-outline-light px-3"
+                    data-print>
+                Print
+            </button>
+        }
+    </div>
 </div>
+
+@* Only shown on paper *@
+<p class="print-only small mb-3">
+    Checked-out equipment for @User.Identity?.Name, printed @DateTime.Now.ToString("MM/dd/yyyy h:mm tt")
+</p>
 
 @if (!Model.Items.Any())
 {
@@ -31,7 +48,7 @@ else
                     <th scope="col">Checked Out</th>
                     <th scope="col">Due Date</th>
                     <th scope="col">Status</th>
-                    <th scope="col" class="text-end">Action</th>
+                    <th scope="col" class="text-end no-print">Action</th>
                 </tr>
             </thead>
 
@@ -58,7 +75,7 @@ else
                                 <span>On Time</span>
                             }
                         </td>
-                        <td class="text-end">
+                        <td class="text-end no-print">
                             @* Return button beside each item (FR-24) *@
                             <form asp-controller="Checkouts"
                                   asp-action="Return"

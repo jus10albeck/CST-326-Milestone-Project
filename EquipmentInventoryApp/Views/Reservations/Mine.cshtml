@@ -1,0 +1,91 @@
+﻿@model EquipmentInventoryApp.ViewModels.PagedResult<EquipmentInventoryApp.Services.MyReservationRow>
+
+@{
+    ViewData["Title"] = "My Reservations";
+}
+
+<h2 class="h4 fw-bold mb-1">My Reservations</h2>
+<p class="mb-4">Your reservation requests, newest first. You will also get a notification when one is approved or denied. You can cancel a request until its end date has passed.</p>
+
+@if (Model.TotalCount == 0)
+{
+    <p>
+        You have not requested any reservations yet. Open an item from the
+        <a asp-controller="Equipment" asp-action="Index">Equipment List</a>
+        and select Request Reservation.
+    </p>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table app-table mb-0">
+            <thead>
+                <tr>
+                    <th scope="col">Item</th>
+                    <th scope="col">Serial</th>
+                    <th scope="col">Date Range</th>
+                    <th scope="col">Status</th>
+                    <th scope="col" class="text-end">Action</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var row in Model.Items)
+                {
+                    <tr>
+                        <td>
+                            <a asp-controller="Equipment"
+                               asp-action="Details"
+                               asp-route-id="@row.EquipmentId">@row.ItemName</a>
+                        </td>
+                        <td>@row.SerialNumber</td>
+                        <td class="text-nowrap">
+                            @row.StartDate.ToString("MM/dd/yyyy") to @row.EndDate.ToString("MM/dd/yyyy")
+                        </td>
+                        <td>
+                            @* The status is written out, so color is not the only signal *@
+                            @if (row.Status == "Approved")
+                            {
+                                <span class="badge bg-success">Approved</span>
+                            }
+                            else if (row.Status == "Denied")
+                            {
+                                <span class="badge bg-danger">Denied</span>
+                            }
+                            else if (row.Status == "Cancelled")
+                            {
+                                <span class="badge bg-secondary">Cancelled</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning text-dark">@row.Status</span>
+                            }
+                        </td>
+                        <td class="text-end">
+                            @if (row.CanCancel)
+                            {
+                                <form asp-controller="Reservations"
+                                      asp-action="CancelMine"
+                                      asp-route-id="@row.ReservationId"
+                                      asp-route-page="@Model.Page"
+                                      method="post"
+                                      class="m-0"
+                                      data-submit-once
+                                      data-confirm="Cancel your reservation for @row.ItemName from @row.StartDate.ToString("MM/dd/yyyy") to @row.EndDate.ToString("MM/dd/yyyy")?">
+                                    <button type="submit"
+                                            class="btn btn-sm btn-outline-danger"
+                                            aria-label="Cancel reservation for @row.ItemName">
+                                        Cancel
+                                    </button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <partial name="_Pager"
+             model="@(new EquipmentInventoryApp.ViewModels.PagerViewModel { Page = Model.Page, TotalPages = Model.TotalPages, PageParameter = "page", Label = "My Reservations" })" />
+}

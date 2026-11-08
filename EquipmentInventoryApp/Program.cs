@@ -48,6 +48,7 @@ builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<DamageReportService>();
 builder.Services.AddScoped<ReservationService>();
 builder.Services.AddScoped<DashboardService>();
+builder.Services.AddScoped<OverdueReminderService>();
 
 // Rules for changing an item's status and retiring it
 builder.Services.AddScoped<EquipmentStatusService>();

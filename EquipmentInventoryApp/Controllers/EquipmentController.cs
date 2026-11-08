@@ -21,6 +21,7 @@ namespace EquipmentInventoryApp.Controllers
         private readonly EquipmentStatusService _statusService;
         private readonly EquipmentHistoryService _history;
         private readonly CheckoutHistoryService _checkoutHistory;
+        private readonly ReservationService _reservations;
 
         // Photo rules from the requirements: JPG or PNG, 5 MB or smaller
         private const long MaxPhotoBytes = 5 * 1024 * 1024;
@@ -32,8 +33,10 @@ namespace EquipmentInventoryApp.Controllers
             CheckoutService checkoutService,
             EquipmentStatusService statusService,
             EquipmentHistoryService history,
-            CheckoutHistoryService checkoutHistory)
+            CheckoutHistoryService checkoutHistory,
+            ReservationService reservations)
         {
+            _reservations = reservations;
             _history = history;
             _checkoutHistory = checkoutHistory;
             _context = context;
@@ -160,6 +163,10 @@ namespace EquipmentInventoryApp.Controllers
 
                 ViewBag.CheckoutAvailability =
                     await _checkoutService.GetAvailabilityAsync(equipment, userId);
+
+                // Approved dates that are already taken, shown beside Request Reservation (US-23)
+                ViewBag.UpcomingReservations =
+                    await _reservations.GetUpcomingApprovedAsync(equipment.EquipmentId);
             }
 
             // Administrators see who has the item and the Edit, Change Status, and Retire controls

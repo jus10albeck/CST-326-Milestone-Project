@@ -35,6 +35,22 @@
         as EquipmentInventoryApp.ViewModels.PagedResult<EquipmentInventoryApp.Services.CheckoutHistoryRow>;
     var changeHistory = ViewBag.ChangeHistory
         as EquipmentInventoryApp.ViewModels.PagedResult<EquipmentInventoryApp.Services.ItemHistoryRow>;
+
+    // Request Reservation (employees only). The dates come back after an error.
+    var upcomingReservations = ViewBag.UpcomingReservations
+        as List<EquipmentInventoryApp.Services.ReservedDateRange>
+        ?? new List<EquipmentInventoryApp.Services.ReservedDateRange>();
+    // TempData gives back date text as a DateTime, so both forms are handled
+    string? DateDraft(object? value) => value switch
+    {
+        DateTime date => date.ToString("yyyy-MM-dd"),
+        string text when !string.IsNullOrWhiteSpace(text) => text,
+        _ => null
+    };
+    var reservationStartDraft = DateDraft(TempData["ReservationStartDraft"]);
+    var reservationEndDraft = DateDraft(TempData["ReservationEndDraft"]);
+    var showReservationForm = TempData.ContainsKey("ReservationStartDraft") || TempData.ContainsKey("ReservationEndDraft");
+    var todayValue = DateTime.Today.ToString("yyyy-MM-dd");
 }
 
 <a asp-controller="Equipment"
@@ -349,10 +365,19 @@
             </p>
         }
 
-        @* Report Damage opens the damage form (US-29). Not offered for retired items. *@
+        @* Request Reservation and Report Damage (US-23, US-29). Not offered for retired items. *@
         @if (Model.Status != "Retired")
         {
-            <div class="mt-3">
+            <div class="d-flex flex-wrap gap-2 mt-3">
+                <button type="button"
+                        class="btn btn-outline-light px-4"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#request-reservation"
+                        aria-expanded="@(showReservationForm ? "true" : "false")"
+                        aria-controls="request-reservation">
+                    Request Reservation
+                </button>
+
                 <a asp-controller="DamageReports"
                    asp-action="Create"
                    asp-route-equipmentId="@Model.EquipmentId"
@@ -360,6 +385,77 @@
                     Report Damage
                 </a>
             </div>
+
+            @* Start and end date picker (fields Res-1, Res-2). The server checks the dates again. *@
+            <section id="request-reservation"
+                     class="collapse reservation-panel mt-3 @(showReservationForm ? "show" : "")"
+                     aria-labelledby="request-reservation-heading">
+
+                <h3 id="request-reservation-heading" class="h6 fw-bold mb-1">Request Reservation</h3>
+                <p class="small mb-3">
+                    Choose the days you need this item. Your request is saved as Pending
+                    until an administrator approves or denies it.
+                </p>
+
+                <form asp-controller="Reservations"
+                      asp-action="Create"
+                      method="post"
+                      class="d-flex flex-wrap align-items-end gap-3"
+                      data-submit-once
+                      data-date-range
+                      novalidate>
+
+                    <input type="hidden" name="EquipmentId" value="@Model.EquipmentId" />
+
+                    <div>
+                        <label for="reservation-start" class="form-label small mb-1">
+                            Start Date <span class="required-mark" aria-hidden="true">*</span>
+                        </label>
+                        <input type="date"
+                               id="reservation-start"
+                               name="StartDate"
+                               class="form-control"
+                               min="@todayValue"
+                               value="@reservationStartDraft"
+                               required
+                               data-range-start />
+                    </div>
+
+                    <div>
+                        <label for="reservation-end" class="form-label small mb-1">
+                            End Date <span class="required-mark" aria-hidden="true">*</span>
+                        </label>
+                        <input type="date"
+                               id="reservation-end"
+                               name="EndDate"
+                               class="form-control"
+                               min="@(reservationStartDraft ?? todayValue)"
+                               value="@reservationEndDraft"
+                               required
+                               data-range-end />
+                    </div>
+
+                    <button type="submit" class="btn btn-outline-light fw-bold px-4">
+                        Submit Request
+                    </button>
+
+                    <p class="field-error small w-100 mb-0 d-none" data-range-error role="alert">
+                        Please enter a valid date range
+                    </p>
+                </form>
+
+                @* Dates that are already approved for someone, so the employee can pick others *@
+                @if (upcomingReservations.Any())
+                {
+                    <div class="small mt-3">
+                        <span class="fw-bold">Already reserved:</span>
+                        @string.Join(", ", upcomingReservations.Select(r =>
+                            r.StartDate.Date == r.EndDate.Date
+                                ? r.StartDate.ToString("MM/dd/yyyy")
+                                : $"{r.StartDate:MM/dd/yyyy} to {r.EndDate:MM/dd/yyyy}"))
+                    </div>
+                }
+            </section>
         }
     </div>
 }

@@ -1,4 +1,5 @@
 ﻿@inject EquipmentInventoryApp.Services.NotificationService NotificationService
+@inject EquipmentInventoryApp.Services.OverdueReminderService OverdueReminderService
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -109,6 +110,11 @@
                                 <a asp-controller="Checkouts"
                                    asp-action="History">Checkout History</a>
                             </li>
+
+                            <li>
+                                <a asp-controller="Reservations"
+                                   asp-action="Mine">My Reservations</a>
+                            </li>
                         }
 
                         @if (User.IsInRole("Administrator"))
@@ -206,6 +212,48 @@
                                 <button type="submit" class="btn btn-sm btn-outline-light">Dismiss All</button>
                             </form>
                         }
+                    </section>
+                }
+            }
+
+            @* Overdue reminder after login (US-31). Worked out from the employee's overdue
+               checkouts on each page load, so it disappears once the items are returned. *@
+            @if (User.IsInRole("Employee") && !mustChangePassword &&
+                 Context.Request.Cookies[EquipmentInventoryApp.Services.OverdueReminderService.DismissedCookie] != "1" &&
+                 int.TryParse(User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value, out var reminderUserId))
+            {
+                var overdueItems = await OverdueReminderService.GetOverdueAsync(reminderUserId);
+
+                if (overdueItems.Any())
+                {
+                    <section class="alert alert-warning overdue-reminder mb-3" role="alert" aria-labelledby="overdue-reminder-heading">
+                        <div class="d-flex flex-wrap align-items-start justify-content-between gap-2">
+                            <div>
+                                <h2 id="overdue-reminder-heading" class="h6 fw-bold mb-1">
+                                    Reminder: you have @overdueItems.Count overdue @(overdueItems.Count == 1 ? "item" : "items")
+                                </h2>
+                                <p class="mb-2">Please return @(overdueItems.Count == 1 ? "it" : "them") as soon as possible.</p>
+                                <ul class="mb-2">
+                                    @foreach (var item in overdueItems)
+                                    {
+                                        <li>
+                                            <strong>@item.Name</strong> (@item.SerialNumber), due
+                                            @item.DueDate.ToString("MM/dd/yyyy"),
+                                            @item.DaysOverdue @(item.DaysOverdue == 1 ? "day" : "days") overdue
+                                        </li>
+                                    }
+                                </ul>
+                                <a asp-controller="Checkouts" asp-action="MyEquipment" class="alert-link">Go to My Equipment</a>
+                            </div>
+
+                            <form asp-controller="Notifications"
+                                  asp-action="DismissOverdueReminder"
+                                  method="post"
+                                  class="m-0">
+                                <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+                                <button type="submit" class="btn btn-sm btn-outline-dark">Dismiss</button>
+                            </form>
+                        </div>
                     </section>
                 }
             }

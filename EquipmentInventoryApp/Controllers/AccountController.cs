@@ -103,6 +103,9 @@ namespace EquipmentInventoryApp.Controllers
 
             await SignInUserAsync(user);
 
+            // Shows the overdue reminder again after every login (US-31)
+            Response.Cookies.Delete(OverdueReminderService.DismissedCookie);
+
             // A temporary password must be changed before using the application
             if (user.MustChangePassword)
             {
@@ -258,6 +261,8 @@ namespace EquipmentInventoryApp.Controllers
         {
             await HttpContext.SignOutAsync(
                 CookieAuthenticationDefaults.AuthenticationScheme);
+
+            Response.Cookies.Delete(OverdueReminderService.DismissedCookie);
 
             return RedirectToAction("Login");
         }

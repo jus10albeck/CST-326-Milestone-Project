@@ -3,6 +3,20 @@
 
 // Write your JavaScript code.
 
+// Asks "Are you sure?" before sending a form marked with data-confirm, such as Cancel.
+// Runs before the double-submit guard below.
+document.addEventListener("submit", function (event) {
+    var form = event.target;
+
+    if (!form.matches || !form.matches("form[data-confirm]")) {
+        return;
+    }
+
+    if (!window.confirm(form.dataset.confirm)) {
+        event.preventDefault();
+    }
+}, true);
+
 // Stops a form marked with data-submit-once from being sent twice,
 // for example when its button is double-clicked.
 document.addEventListener("submit", function (event) {
@@ -93,4 +107,55 @@ document.querySelectorAll("[data-char-count-group]").forEach(function (group) {
 
     textarea.addEventListener("input", updateCount);
     updateCount();
+});
+
+// Request Reservation form: the end date cannot be before the start date.
+// The server checks the dates again and shows the same message.
+document.querySelectorAll("form[data-date-range]").forEach(function (form) {
+    var start = form.querySelector("[data-range-start]");
+    var end = form.querySelector("[data-range-end]");
+    var error = form.querySelector("[data-range-error]");
+
+    if (!start || !end) {
+        return;
+    }
+
+    function isValid() {
+        if (!start.value || !end.value) {
+            return false;
+        }
+
+        return end.value >= start.value && (!start.min || start.value >= start.min);
+    }
+
+    start.addEventListener("change", function () {
+        end.min = start.value || start.min;
+
+        if (end.value && start.value && end.value < start.value) {
+            end.value = start.value;
+        }
+    });
+
+    form.addEventListener("submit", function (event) {
+        if (!isValid()) {
+            event.preventDefault();
+
+            if (error) {
+                error.classList.remove("d-none");
+            }
+
+            return;
+        }
+
+        if (error) {
+            error.classList.add("d-none");
+        }
+    }, true);
+});
+
+// Print button on My Equipment opens the browser's print dialog (FR-38)
+document.querySelectorAll("[data-print]").forEach(function (button) {
+    button.addEventListener("click", function () {
+        window.print();
+    });
 });

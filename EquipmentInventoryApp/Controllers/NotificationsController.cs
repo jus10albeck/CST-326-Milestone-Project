@@ -37,6 +37,26 @@ namespace EquipmentInventoryApp.Controllers
             return GoBack(returnUrl);
         }
 
+        // Hides the overdue reminder until the employee logs in again (US-31).
+        // The reminder still goes away on its own once the items are returned.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult DismissOverdueReminder(string? returnUrl)
+        {
+            Response.Cookies.Append(
+                OverdueReminderService.DismissedCookie,
+                "1",
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = Request.IsHttps,
+                    SameSite = SameSiteMode.Lax,
+                    IsEssential = true
+                });
+
+            return GoBack(returnUrl);
+        }
+
         // Only returns to pages on this site
         private IActionResult GoBack(string? returnUrl)
         {

@@ -50,7 +50,10 @@ namespace EquipmentInventoryApp.Services
                     .CountAsync(e => e.Status == "Under Repair"),
 
                 LostCount = await _context.Equipment
-                    .CountAsync(e => e.Status == "Lost")
+                    .CountAsync(e => e.Status == "Lost"),
+
+                PendingReservationCount = await _context.Reservations
+                    .CountAsync(r => r.Status == ReservationService.PendingStatus)
             };
 
             model.OverdueItems = await GetOverdueRowsAsync(0, DashboardOverdueRows);

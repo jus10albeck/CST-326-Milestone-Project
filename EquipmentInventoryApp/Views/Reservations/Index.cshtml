@@ -2,10 +2,14 @@
 
 @{
     ViewData["Title"] = "Reservations";
+
+    // Approved reservations that have not ended yet
+    var approved = ViewBag.Approved
+        as EquipmentInventoryApp.ViewModels.PagedResult<EquipmentInventoryApp.Services.ApprovedReservationRow>;
 }
 
 <h2 class="h4 fw-bold mb-1">Reservations</h2>
-<p class="mb-4">Pending requests, soonest first. Approving creates a notification for the employee.</p>
+<p class="mb-4">Pending requests, soonest first. Approving, denying, or cancelling creates a notification for the employee.</p>
 
 @if (Model.TotalCount == 0)
 {
@@ -56,6 +60,7 @@ else
                                       asp-action="Approve"
                                       asp-route-id="@request.ReservationId"
                                       asp-route-page="@Model.Page"
+                                      asp-route-approvedPage="@(approved?.Page ?? 1)"
                                       method="post"
                                       class="m-0"
                                       data-submit-once>
@@ -71,6 +76,7 @@ else
                                       asp-action="Deny"
                                       asp-route-id="@request.ReservationId"
                                       asp-route-page="@Model.Page"
+                                      asp-route-approvedPage="@(approved?.Page ?? 1)"
                                       method="post"
                                       class="m-0"
                                       data-submit-once>
@@ -90,4 +96,76 @@ else
 
     <partial name="_Pager"
              model="@(new EquipmentInventoryApp.ViewModels.PagerViewModel { Page = Model.Page, TotalPages = Model.TotalPages, PageParameter = "page", Label = "Reservation requests" })" />
+}
+
+@* Approved reservations that have not ended. Cancelling frees the dates. *@
+@if (approved != null)
+{
+    <section class="mt-5" aria-labelledby="approved-reservations">
+        <h2 id="approved-reservations" class="h5 fw-bold mb-1">Approved Reservations</h2>
+        <p class="mb-3">Current and upcoming reservations, soonest first.</p>
+
+        @if (approved.TotalCount == 0)
+        {
+            <p>There are no current or upcoming approved reservations.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table app-table mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col">Item</th>
+                            <th scope="col">Employee</th>
+                            <th scope="col">Date Range</th>
+                            <th scope="col" class="text-end">Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var reservation in approved.Items)
+                        {
+                            <tr>
+                                <td>
+                                    <a asp-controller="Equipment"
+                                       asp-action="Details"
+                                       asp-route-id="@reservation.EquipmentId">@reservation.ItemName</a>
+                                    <div class="small">@reservation.SerialNumber</div>
+                                </td>
+                                <td>@reservation.EmployeeName</td>
+                                <td class="text-nowrap">
+                                    @reservation.StartDate.ToString("MM/dd/yyyy") to @reservation.EndDate.ToString("MM/dd/yyyy")
+
+                                    @if (reservation.InProgress)
+                                    {
+                                        <div class="small fw-bold">In progress</div>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <form asp-controller="Reservations"
+                                          asp-action="Cancel"
+                                          asp-route-id="@reservation.ReservationId"
+                                          asp-route-page="@Model.Page"
+                                          asp-route-approvedPage="@approved.Page"
+                                          method="post"
+                                          class="m-0"
+                                          data-submit-once
+                                          data-confirm="Cancel @reservation.EmployeeName's reservation for @reservation.ItemName? The employee will be notified.">
+                                        <button type="submit"
+                                                class="btn btn-sm btn-outline-danger"
+                                                aria-label="Cancel reservation from @reservation.EmployeeName for @reservation.ItemName">
+                                            Cancel
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <partial name="_Pager"
+                     model="@(new EquipmentInventoryApp.ViewModels.PagerViewModel { Page = approved.Page, TotalPages = approved.TotalPages, PageParameter = "approvedPage", Anchor = "approved-reservations", Label = "Approved reservations" })" />
+        }
+    </section>
 }

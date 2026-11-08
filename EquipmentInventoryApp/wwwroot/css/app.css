@@ -1,4 +1,4 @@
-/* Styles for the pages shown after logging in, based on the Milestone 3 wireframes.
+﻿/* Styles for the pages shown after logging in, based on the Milestone 3 wireframes.
    Colors are placeholders until the team picks a final color scheme. */
 
 body.app-page {
@@ -415,4 +415,85 @@ body.app-page {
 
 .notification-area .alert {
   border-radius: 0.75rem;
+}
+
+/* ---------- Reservations and overdue reminder ---------- */
+
+.reservation-panel {
+  max-width: 640px;
+  padding: 1rem 1.25rem;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 0.75rem;
+}
+
+.reservation-panel input[type="date"] {
+  min-width: 170px;
+  color-scheme: dark;
+}
+
+.overdue-reminder {
+  border-radius: 0.75rem;
+}
+
+.overdue-reminder ul {
+  padding-left: 1.25rem;
+}
+
+.app-page .overdue-reminder a {
+  color: #4d3a02;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+/* ---------- Print view of My Equipment (FR-38) ---------- */
+
+.print-only {
+  display: none;
+}
+
+@media print {
+  /* Hides navigation, messages, and buttons, leaving the list of items and due dates */
+  .app-header,
+  .alert,
+  .notification-area,
+  .btn,
+  form,
+  .no-print,
+  .pager {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block;
+  }
+
+  body.app-page,
+  .app-page .app-content {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .app-page a {
+    color: #000000 !important;
+    text-decoration: none;
+  }
+
+  .app-page .table,
+  .app-page .table th,
+  .app-page .table td {
+    color: #000000 !important;
+    background: #ffffff !important;
+    border-color: #000000 !important;
+  }
+
+  /* Overdue rows stay labeled "Overdue", and get a light gray shade on paper */
+  .app-page .table tr.row-overdue > * {
+    background: #e6e6e6 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .table-responsive {
+    overflow: visible !important;
+  }
 }
